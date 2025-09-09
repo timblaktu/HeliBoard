@@ -29,19 +29,28 @@ The FN selector feature enables JSON-configurable function key layers in HeliBoa
    - Long press comma key → Settings icon
    - Or: Settings app → System → Languages & Input → Virtual Keyboard → HeliBoard Debug
 
-2. **Add FN-enabled Layout**
-   - Languages & Layouts → "+" button
-   - Select "English (US)" 
-   - Choose one of:
+2. **Navigate to Languages & Layouts**
+   - In HeliBoard settings, tap "Languages & Layouts"
+   - You'll see a list of available languages with toggle switches
+
+3. **Select English (US) Layout Options**
+   - Tap on "English (US)" (not the toggle switch)
+   - This opens a submenu showing all available layout variants:
+     - QWERTY (standard)
      - **QWERTY + FN** - Standard layout with vim navigation
-     - **Programmer + FN** - Developer-focused with symbols
+     - **Programmer + FN** - Developer-focused with symbols  
      - **Vim + FN** - Vim-optimized navigation
+     - QWERTZ, AZERTY, Dvorak, etc.
 
-3. **Enable the Layout**
-   - Toggle the switch next to your chosen layout
-   - Set as primary if desired
+4. **Choose Your FN Layout**
+   - Tap the pencil icon next to your preferred FN layout
+   - The layout will be selected for English (US)
 
-4. **Start Using FN Key**
+5. **Enable the Language**
+   - Back in Languages & Layouts screen
+   - Toggle the switch next to "English (US)" to enable it
+
+6. **Start Using FN Key**
    - Switch to HeliBoard Debug when typing
    - FN key appears (location varies by layout)
    - Hold FN and press other keys for special functions
