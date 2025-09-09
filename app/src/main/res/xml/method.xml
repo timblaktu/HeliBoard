@@ -1281,32 +1281,4 @@
         android:imeSubtypeExtraValue="AsciiCapable,EnabledWhenDefaultIsNotAsciiCapable,EmojiCapable"
         android:isAsciiCapable="true"
     />
-    <!-- FN-enabled layouts -->
-    <subtype android:icon="@drawable/ic_ime_switcher"
-        android:label="QWERTY + FN"
-        android:subtypeId="0xf0000001"
-        android:imeSubtypeLocale="en_US"
-        android:languageTag="en-US"
-        android:imeSubtypeMode="keyboard"
-        android:imeSubtypeExtraValue="KeyboardLayoutSet=MAIN:qwerty_fn+FUNCTIONAL:functional_keys_qwerty_fn,AsciiCapable,EmojiCapable"
-        android:isAsciiCapable="true"
-    />
-    <subtype android:icon="@drawable/ic_ime_switcher"
-        android:label="Programmer + FN"
-        android:subtypeId="0xf0000002"
-        android:imeSubtypeLocale="en_US"
-        android:languageTag="en-US"
-        android:imeSubtypeMode="keyboard"
-        android:imeSubtypeExtraValue="KeyboardLayoutSet=MAIN:programmer_fn+FUNCTIONAL:functional_keys_programmer_fn,AsciiCapable,EmojiCapable"
-        android:isAsciiCapable="true"
-    />
-    <subtype android:icon="@drawable/ic_ime_switcher"
-        android:label="Vim + FN"
-        android:subtypeId="0xf0000003"
-        android:imeSubtypeLocale="en_US"
-        android:languageTag="en-US"
-        android:imeSubtypeMode="keyboard"
-        android:imeSubtypeExtraValue="KeyboardLayoutSet=MAIN:vim_fn+FUNCTIONAL:functional_keys_vim_fn,AsciiCapable,EmojiCapable"
-        android:isAsciiCapable="true"
-    />
 </input-method>
