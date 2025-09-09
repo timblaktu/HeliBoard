@@ -35,12 +35,13 @@ The FN selector feature enables JSON-configurable function key layers in HeliBoa
 
 3. **Select English (US) Layout Options**
    - Tap on "English (US)" (not the toggle switch)
-   - This opens a submenu showing all available layout variants:
-     - QWERTY (standard)
-     - **QWERTY + FN** - Standard layout with vim navigation
-     - **Programmer + FN** - Developer-focused with symbols  
-     - **Vim + FN** - Vim-optimized navigation
-     - QWERTZ, AZERTY, Dvorak, etc.
+   - This opens a submenu showing all available layout variants
+   - The FN layouts appear with their JSON filenames:
+     - **qwerty** (standard)
+     - **qwerty_fn** - Standard layout with vim navigation and FN key
+     - **programmer_fn** - Developer-focused with symbols on FN layer
+     - **vim_fn** - Vim-optimized navigation with FN key
+     - QWERTZ, AZERTY, Dvorak, Colemak, etc.
 
 4. **Choose Your FN Layout**
    - Tap the pencil icon next to your preferred FN layout
