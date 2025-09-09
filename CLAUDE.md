@@ -2,6 +2,13 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Active Development: FN Selector Implementation
+
+**Current Focus**: Implementing FN key as a first-class selector in HeliBoard's layout system.
+- **Design Doc**: [FNSEL.md](./FNSEL.md) - Complete design and implementation plan
+- **Branch**: `fn-selector` - Active development branch
+- **Goal**: Enable JSON-configurable FN key mappings without recompilation
+
 ## Build Commands
 
 ### Common Development Tasks
@@ -136,31 +143,55 @@ HeliBoard's selector system enables context-aware keys that reduce layout crowdi
 3. **Combine with popup keys** for tertiary functions
 4. **Test across input types** (email, password, URL fields) to ensure proper behavior
 
-#### Function Layer Implementation (✅ COMPLETED)
+#### Function Layer Implementation
 
-Full FN key support with vim-style navigation and function keys has been successfully implemented in HeliBoard.
+**Current Status**: Transitioning from hardcoded to selector-based implementation
 
-**Implementation Status: COMPLETED**
+**Branch Structure**:
+- `fn-hard`: Contains working hardcoded FN implementation (completed)
+- `fn-selector`: New selector-based FN implementation (in development)
 
-All required changes have been made and tested. The FN key now provides a complete function layer with AutoHotkey-style mappings.
+**Design Documentation**: See [FNSEL.md](./FNSEL.md) for complete FN selector design and implementation plan.
 
-**Implemented Changes:**
+##### Hardcoded Implementation (fn-hard branch) ✅
 
-1. **`app/src/main/java/helium314/keyboard/keyboard/PointerTracker.java:736`** ✅
-   - **Modified:** Removed `&& code != KeyCode.FN` from sliding input check
-   - **Result:** FN key now supports sliding input (hold FN + tap other keys)
+1. **`app/src/main/java/helium314/keyboard/keyboard/PointerTracker.java:736`**
+   - Removed `&& code != KeyCode.FN` from sliding input check
+   - FN key supports sliding input (hold FN + tap other keys)
 
-2. **`app/src/main/java/helium314/keyboard/keyboard/KeyboardActionListenerImpl.kt:117-165`** ✅
-   - **Added:** Complete FN key remapping logic in `onCodeInput()` method
-   - **Implementation:** When FN state is active, remaps keys to function/navigation codes
+2. **`app/src/main/java/helium314/keyboard/keyboard/KeyboardActionListenerImpl.kt:117-165`**
+   - Hardcoded FN key remapping logic in `onCodeInput()` method
+   - When FN state is active, remaps keys to function/navigation codes
 
-3. **Layout Files Created:** ✅
+3. **Layout Files Created:**
    - `app/src/main/assets/layouts/functional/functional_keys_with_fn.json` - FN key at top left
    - `app/src/main/assets/layouts/functional/functional_keys_fn_bottom.json` - FN key in bottom row
 
-**JSON Layout Configuration:**
+##### FN Selector Implementation (fn-selector branch) 🚧
 
-To use the FN key feature, create or modify a functional layout JSON file:
+**Goal**: Make FN a first-class selector enabling JSON-based configuration of FN key mappings.
+
+**Key Features**:
+- JSON-configurable FN mappings (no recompilation needed)
+- Visual feedback (dynamic label updates)
+- Composable with other selectors
+- User customization without code changes
+
+**Implementation Components**:
+1. `FnSelector` class in KeyData.kt
+2. FN state tracking in KeyboardId
+3. State management in KeyboardSwitcher
+4. JSON schema for fn_selector
+
+**Example JSON Usage**:
+```json
+{ "$": "fn_selector",
+  "normal": { "label": "h" },
+  "fn": { "code": -21, "label": "←" }
+}
+```
+
+The original hardcoded implementation used a fixed FN key definition:
 
 ```json
 [
@@ -251,8 +282,7 @@ if (mFnState) {
 3. Hold FN and tap mapped keys for special functions
 4. Or slide from FN to target key (like shift sliding)
 
-**Customizing for Your AutoHotkey Script:**
-To match your specific AutoHotkey mappings, edit the `when` block in `KeyboardActionListenerImpl.kt` and add your custom mappings following the pattern shown above
+With the new FN selector implementation, customization is done entirely through JSON layout files without any code changes.
 
 ## Dictionary System
 
