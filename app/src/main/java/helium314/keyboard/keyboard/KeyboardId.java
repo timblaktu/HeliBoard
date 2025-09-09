@@ -81,6 +81,7 @@ public final class KeyboardId {
     public final boolean mHasShortcutKey;
     public final boolean mIsSplitLayout;
     public final boolean mOneHandedModeEnabled;
+    public final boolean mIsFnActive;
 
     private final int mHashCode;
 
@@ -100,6 +101,7 @@ public final class KeyboardId {
         mHasShortcutKey = params.mVoiceInputKeyEnabled;
         mIsSplitLayout = params.mIsSplitLayoutEnabled;
         mOneHandedModeEnabled = params.mOneHandedModeEnabled;
+        mIsFnActive = params.mIsFnActive;
 
         mHashCode = computeHashCode(this);
     }
@@ -122,7 +124,8 @@ public final class KeyboardId {
                 id.navigateNext(),
                 id.navigatePrevious(),
                 id.mSubtype,
-                id.mIsSplitLayout
+                id.mIsSplitLayout,
+                id.mIsFnActive
         });
     }
 
@@ -145,7 +148,8 @@ public final class KeyboardId {
                 && other.navigateNext() == navigateNext()
                 && other.navigatePrevious() == navigatePrevious()
                 && other.mSubtype.equals(mSubtype)
-                && other.mIsSplitLayout == mIsSplitLayout;
+                && other.mIsSplitLayout == mIsSplitLayout
+                && other.mIsFnActive == mIsFnActive;
     }
 
     private static boolean isAlphabetKeyboard(final int elementId) {
@@ -223,7 +227,7 @@ public final class KeyboardId {
 
     @Override
     public String toString() {
-        return String.format(Locale.ROOT, "[%s %s:%s %dx%d %s %s%s%s%s%s%s%s%s%s%s%s]",
+        return String.format(Locale.ROOT, "[%s %s:%s %dx%d %s %s%s%s%s%s%s%s%s%s%s%s%s]",
                 elementIdToName(mElementId),
                 mSubtype.getLocale(),
                 mSubtype.getExtraValueOf(KEYBOARD_LAYOUT_SET),
@@ -239,7 +243,8 @@ public final class KeyboardId {
                 (mLanguageSwitchKeyEnabled ? " languageSwitchKeyEnabled" : ""),
                 (mEmojiKeyEnabled ? " emojiKeyEnabled" : ""),
                 (isMultiLine() ? " isMultiLine" : ""),
-                (mIsSplitLayout ? " isSplitLayout" : "")
+                (mIsSplitLayout ? " isSplitLayout" : ""),
+                (mIsFnActive ? " fnActive" : "")
         );
     }
 
@@ -315,5 +320,10 @@ public final class KeyboardId {
             case KeyboardId.ELEMENT_ALPHABET_AUTOMATIC_SHIFTED -> WordComposer.CAPS_MODE_AUTO_SHIFTED;
             default -> WordComposer.CAPS_MODE_OFF;
         };
+    }
+
+    // Getter for Kotlin compatibility
+    public boolean isFnActive() {
+        return mIsFnActive;
     }
 }

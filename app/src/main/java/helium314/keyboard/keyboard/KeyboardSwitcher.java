@@ -71,6 +71,8 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
     private LatinIME mLatinIME;
     private RichInputMethodManager mRichImm;
     private boolean mIsHardwareAcceleratedDrawingEnabled;
+    private boolean mFnState = false;
+    private EditorInfo mCurrentEditorInfo;
 
     private KeyboardState mState;
 
@@ -140,6 +142,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
 
     private void loadKeyboard(final EditorInfo editorInfo, final SettingsValues settingsValues,
             final int currentAutoCapsState, final int currentRecapitalizeState) {
+        mCurrentEditorInfo = editorInfo;
         final KeyboardLayoutSet.Builder builder = new KeyboardLayoutSet.Builder(
                 mThemeContext, editorInfo);
         final int keyboardWidth = ResourceUtils.getKeyboardWidth(mThemeContext, settingsValues);
@@ -153,6 +156,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                 .setEmojiKeyEnabled(settingsValues.mShowsEmojiKey)
                 .setSplitLayoutEnabled(settingsValues.mIsSplitKeyboardEnabled)
                 .setOneHandedModeEnabled(oneHandedModeEnabled)
+                .setFnActive(mFnState)
                 .build();
         try {
             mState.onLoadKeyboard(currentAutoCapsState, currentRecapitalizeState, oneHandedModeEnabled);
@@ -168,6 +172,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                         .setEmojiKeyEnabled(settingsValues.mShowsEmojiKey)
                         .setSplitLayoutEnabled(settingsValues.mIsSplitKeyboardEnabled)
                         .setOneHandedModeEnabled(oneHandedModeEnabled)
+                        .setFnActive(mFnState)
                         .build();
                 mState.onLoadKeyboard(currentAutoCapsState, currentRecapitalizeState, oneHandedModeEnabled);
                 showToast("error loading the keyboard, falling back to defaults", false);
@@ -234,6 +239,41 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
     public void onFinishSlidingInput(final int currentAutoCapsState,
             final int currentRecapitalizeState) {
         mState.onFinishSlidingInput(currentAutoCapsState, currentRecapitalizeState);
+    }
+
+    public void setFnState(final boolean fnState) {
+        if (mFnState != fnState) {
+            mFnState = fnState;
+            // Trigger keyboard recreation with new FN state
+            if (mKeyboardLayoutSet != null && mCurrentEditorInfo != null) {
+                final SettingsValues settingsValues = Settings.getValues();
+                final int keyboardWidth = ResourceUtils.getKeyboardWidth(mThemeContext, settingsValues);
+                final int keyboardHeight = ResourceUtils.getKeyboardHeight(mThemeContext.getResources(), settingsValues);
+                
+                // Rebuild keyboard layout set with FN state
+                mKeyboardLayoutSet = new KeyboardLayoutSet.Builder(mThemeContext, mCurrentEditorInfo)
+                        .setKeyboardGeometry(keyboardWidth, keyboardHeight)
+                        .setSubtype(mRichImm.getCurrentSubtype())
+                        .setVoiceInputKeyEnabled(settingsValues.mShowsVoiceInputKey)
+                        .setNumberRowEnabled(settingsValues.mShowsNumberRow)
+                        .setLanguageSwitchKeyEnabled(settingsValues.isLanguageSwitchKeyEnabled())
+                        .setEmojiKeyEnabled(settingsValues.mShowsEmojiKey)
+                        .setSplitLayoutEnabled(settingsValues.mIsSplitKeyboardEnabled)
+                        .setOneHandedModeEnabled(settingsValues.mOneHandedModeEnabled)
+                        .setFnActive(fnState)
+                        .build();
+                
+                // Force keyboard refresh by setting the current keyboard again
+                if (mKeyboardView != null && mKeyboardView.getKeyboard() != null) {
+                    final int elementId = mKeyboardView.getKeyboard().mId.mElementId;
+                    setKeyboard(elementId, KeyboardSwitchState.OTHER);
+                }
+            }
+        }
+    }
+
+    public boolean isFnActive() {
+        return mFnState;
     }
 
     // Implements {@link KeyboardState.SwitchActions}.

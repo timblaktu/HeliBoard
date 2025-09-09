@@ -62,12 +62,20 @@ class KeyboardActionListenerImpl(private val latinIME: LatinIME, private val inp
 
     override fun onPressKey(primaryCode: Int, repeatCount: Int, isSinglePointer: Boolean) {
         adjustMetaState(primaryCode, false)
+        // Update FN state in KeyboardSwitcher for selector system
+        if (primaryCode == KeyCode.FN) {
+            keyboardSwitcher.setFnState(true)
+        }
         keyboardSwitcher.onPressKey(primaryCode, isSinglePointer, latinIME.currentAutoCapsState, latinIME.currentRecapitalizeState)
         latinIME.hapticAndAudioFeedback(primaryCode, repeatCount)
     }
 
     override fun onReleaseKey(primaryCode: Int, withSliding: Boolean) {
         adjustMetaState(primaryCode, true)
+        // Update FN state in KeyboardSwitcher for selector system
+        if (primaryCode == KeyCode.FN) {
+            keyboardSwitcher.setFnState(false)
+        }
         keyboardSwitcher.onReleaseKey(primaryCode, withSliding, latinIME.currentAutoCapsState, latinIME.currentRecapitalizeState)
     }
 
@@ -114,7 +122,11 @@ class KeyboardActionListenerImpl(private val latinIME: LatinIME, private val inp
         }
         val mkv = keyboardSwitcher.mainKeyboardView
 
-        // Apply FN key remapping when FN meta state is active
+        // FN key remapping is now handled by FnSelector in JSON layouts
+        // The hardcoded remapping below is disabled in favor of the selector system
+        val remappedCode = primaryCode
+        
+        /* // Original hardcoded FN remapping (kept for reference)
         val remappedCode = if ((metaState and KeyEvent.META_FUNCTION_ON) != 0) {
             when (primaryCode) {
                 // hjkl = arrow keys (vim-style navigation)
@@ -163,6 +175,7 @@ class KeyboardActionListenerImpl(private val latinIME: LatinIME, private val inp
         } else {
             primaryCode
         }
+        */
 
         // checking if the character is a combining accent
         val event = if (remappedCode in combiningRange) { // todo: should this be done later, maybe in inputLogic?
