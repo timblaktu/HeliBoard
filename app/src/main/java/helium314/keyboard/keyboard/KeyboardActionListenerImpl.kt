@@ -114,17 +114,67 @@ class KeyboardActionListenerImpl(private val latinIME: LatinIME, private val inp
         }
         val mkv = keyboardSwitcher.mainKeyboardView
 
+        // Apply FN key remapping when FN meta state is active
+        val remappedCode = if ((metaState and KeyEvent.META_FUNCTION_ON) != 0) {
+            when (primaryCode) {
+                // hjkl = arrow keys (vim-style navigation)
+                'h'.code -> KeyCode.ARROW_LEFT
+                'j'.code -> KeyCode.ARROW_DOWN
+                'k'.code -> KeyCode.ARROW_UP
+                'l'.code -> KeyCode.ARROW_RIGHT
+                'H'.code -> KeyCode.ARROW_LEFT  // Capital H
+                'J'.code -> KeyCode.ARROW_DOWN   // Capital J
+                'K'.code -> KeyCode.ARROW_UP     // Capital K
+                'L'.code -> KeyCode.ARROW_RIGHT  // Capital L
+                
+                // Numbers = F1-F10
+                '1'.code -> KeyCode.F1
+                '2'.code -> KeyCode.F2
+                '3'.code -> KeyCode.F3
+                '4'.code -> KeyCode.F4
+                '5'.code -> KeyCode.F5
+                '6'.code -> KeyCode.F6
+                '7'.code -> KeyCode.F7
+                '8'.code -> KeyCode.F8
+                '9'.code -> KeyCode.F9
+                '0'.code -> KeyCode.F10
+                '-'.code -> KeyCode.F11
+                '='.code -> KeyCode.F12
+                
+                // Navigation keys
+                '['.code -> KeyCode.MOVE_START_OF_LINE  // Home
+                ']'.code -> KeyCode.MOVE_END_OF_LINE    // End
+                ';'.code -> KeyCode.PAGE_UP
+                '\''.code -> KeyCode.PAGE_DOWN
+                
+                // Word navigation
+                'u'.code -> KeyCode.WORD_LEFT
+                'i'.code -> KeyCode.WORD_RIGHT
+                'U'.code -> KeyCode.WORD_LEFT   // Capital U
+                'I'.code -> KeyCode.WORD_RIGHT  // Capital I
+                
+                // Other useful mappings
+                'p'.code -> KeyCode.INSERT
+                'P'.code -> KeyCode.INSERT       // Capital P
+                '\\'.code -> KeyCode.DELETE     // Backslash = Delete (forward delete)
+                
+                else -> primaryCode // Keep original code if no mapping
+            }
+        } else {
+            primaryCode
+        }
+
         // checking if the character is a combining accent
-        val event = if (primaryCode in combiningRange) { // todo: should this be done later, maybe in inputLogic?
-            Event.createSoftwareDeadEvent(primaryCode, 0, metaState, mkv.getKeyX(x), mkv.getKeyY(y), null)
+        val event = if (remappedCode in combiningRange) { // todo: should this be done later, maybe in inputLogic?
+            Event.createSoftwareDeadEvent(remappedCode, 0, metaState, mkv.getKeyX(x), mkv.getKeyY(y), null)
         } else {
             // todo:
             //  setting meta shift should only be done for arrow and similar cursor movement keys
             //  should only be enabled once it works more reliably (currently depends on app for some reason)
 //            if (mkv.keyboard?.mId?.isAlphabetShiftedManually == true)
-//                Event.createSoftwareKeypressEvent(primaryCode, metaState or KeyEvent.META_SHIFT_ON, mkv.getKeyX(x), mkv.getKeyY(y), isKeyRepeat)
-//            else Event.createSoftwareKeypressEvent(primaryCode, metaState, mkv.getKeyX(x), mkv.getKeyY(y), isKeyRepeat)
-            Event.createSoftwareKeypressEvent(primaryCode, metaState, mkv.getKeyX(x), mkv.getKeyY(y), isKeyRepeat)
+//                Event.createSoftwareKeypressEvent(remappedCode, metaState or KeyEvent.META_SHIFT_ON, mkv.getKeyX(x), mkv.getKeyY(y), isKeyRepeat)
+//            else Event.createSoftwareKeypressEvent(remappedCode, metaState, mkv.getKeyX(x), mkv.getKeyY(y), isKeyRepeat)
+            Event.createSoftwareKeypressEvent(remappedCode, metaState, mkv.getKeyX(x), mkv.getKeyY(y), isKeyRepeat)
         }
         latinIME.onEvent(event)
     }

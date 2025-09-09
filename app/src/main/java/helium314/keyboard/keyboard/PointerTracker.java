@@ -733,7 +733,7 @@ public final class PointerTracker implements PointerTrackerQueue.Element,
     private void startKeySelectionByDraggingFinger(final Key key) {
         if (!mIsInDraggingFinger) {
             final int code = key.getCode(); // todo: no sliding input yet for those keys, but it would be really useful
-            mIsInSlidingKeyInput = key.isModifier() && code != KeyCode.CTRL && code != KeyCode.ALT && code != KeyCode.FN && code != KeyCode.META;
+            mIsInSlidingKeyInput = key.isModifier() && code != KeyCode.CTRL && code != KeyCode.ALT && code != KeyCode.META;
         }
         mIsInDraggingFinger = true;
     }
