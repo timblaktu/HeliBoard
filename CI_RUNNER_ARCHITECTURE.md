@@ -65,7 +65,7 @@ runs-on: ubuntu-latest  # Could be x86_64 OR ARM64
 
 **After** (explicit, reliable):
 ```yaml
-runs-on: ubuntu-20.04   # Guaranteed x86_64
+runs-on: ubuntu-22.04   # Guaranteed x86_64 (updated from ubuntu-20.04 due to Feb 2025 deprecation)
 ```
 
 ### Alternative Options Considered
@@ -78,12 +78,12 @@ runs-on: ubuntu-20.04   # Guaranteed x86_64
 
 1. **`.github/workflows/build-test-auto.yml`**:
    ```yaml
-   runs-on: ubuntu-20.04  # Was: ubuntu-latest
+   runs-on: ubuntu-22.04  # Was: ubuntu-latest, then ubuntu-20.04 (deprecated Feb 2025)
    ```
 
 2. **`.github/workflows/build-debug-apk.yml`**:
    ```yaml  
-   runs-on: ubuntu-20.04  # Was: ubuntu-latest
+   runs-on: ubuntu-22.04  # Was: ubuntu-latest, then ubuntu-20.04 (deprecated Feb 2025)
    ```
 
 ## Benefits
