@@ -5,6 +5,16 @@ plugins {
     kotlin("plugin.compose") version "2.0.0"
 }
 
+import java.io.ByteArrayOutputStream
+
+val gitCommitHash = providers.exec {
+    commandLine("git", "rev-parse", "--short", "HEAD")
+}.standardOutput.asText.map { it.trim().ifEmpty { "unknown" } }
+
+val gitDescribe = providers.exec {
+    commandLine("git", "describe", "--long", "--tags", "--always", "--dirty")
+}.standardOutput.asText.map { it.trim().ifEmpty { gitCommitHash.get() } }
+
 android {
     compileSdk = 35
 
@@ -18,6 +28,8 @@ android {
             abiFilters.clear()
             abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64"))
         }
+        buildConfigField("String", "GIT_VERSION", gitDescribe.map { "\"$it\"" }.get())
+        buildConfigField("String", "GIT_COMMIT", gitCommitHash.map { "\"$it\"" }.get())
         proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
     }
 
@@ -40,6 +52,7 @@ android {
             isMinifyEnabled = true
             isJniDebuggable = false
             applicationIdSuffix = ".debug"
+            versionNameSuffix = gitDescribe.map { "-$it" }.get()
         }
         create("runTests") { // build variant for running tests on CI that skips tests known to fail
             isMinifyEnabled = false
