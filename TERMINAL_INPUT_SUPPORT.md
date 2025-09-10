@@ -1,8 +1,8 @@
-# Terminal Input Support Documentation
+# Terminal Input Bug Fix Documentation
 
 ## Overview
 
-This feature introduces an InputTypeAdapter system to HeliBoard, specifically addressing input issues with terminal emulators and other specialized applications. The adapter pattern allows HeliBoard to send appropriate key sequences based on the input field type, fixing long-standing issues with arrow keys and function keys in terminal applications.
+This bug fix introduces an InputTypeAdapter system to HeliBoard, specifically addressing input issues with terminal emulators and other specialized applications. The adapter pattern allows HeliBoard to send appropriate key sequences based on the input field type, fixing long-standing issues with arrow keys and function keys in terminal applications.
 
 ## Problem Statement
 
@@ -129,9 +129,13 @@ Unit tests can verify:
 
 ### Description
 
-**Is your feature request related to a problem? Please describe.**
+**Describe the bug**
 
-Yes, arrow keys, function keys, and navigation keys don't work in terminal emulator applications like Termux, ConnectBot, and JuiceSSH. These apps use `InputType.TYPE_NULL` which causes HeliBoard to send Android key events that the terminal apps cannot process correctly.
+Arrow keys, function keys, and navigation keys don't work in terminal emulator applications like Termux, ConnectBot, and JuiceSSH. These apps use `InputType.TYPE_NULL` which causes HeliBoard to send Android key events that the terminal apps cannot process correctly.
+
+**Expected behavior**
+
+Arrow keys, function keys, and navigation keys should work properly in terminal emulator applications.
 
 **Describe the solution you'd like**
 
@@ -163,13 +167,13 @@ Terminal emulator users need:
 ## Pull Request Template
 
 ### Title
-`fix: Add InputTypeAdapter for terminal emulator support`
+`fix: Add InputTypeAdapter to fix terminal emulator input issues`
 
 ### Description
 
 ## Summary
 
-This PR fixes arrow keys and function keys in terminal emulator applications by implementing an InputTypeAdapter pattern that sends appropriate ANSI escape sequences for TYPE_NULL input fields.
+This PR fixes a bug where arrow keys and function keys don't work in terminal emulator applications by implementing an InputTypeAdapter pattern that sends appropriate ANSI escape sequences for TYPE_NULL input fields.
 
 ## Problem
 
@@ -221,7 +225,7 @@ Implemented an adapter pattern that:
 - [x] No hardcoded strings
 - [x] Minimal impact on existing code
 
-Fixes #[issue-number] (Arrow keys not working in terminal emulators)
+Fixes #[issue-number] - Arrow keys not working in terminal emulators
 
 ## Future Improvements
 
