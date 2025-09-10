@@ -71,6 +71,9 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
     private LatinIME mLatinIME;
     private RichInputMethodManager mRichImm;
     private boolean mIsHardwareAcceleratedDrawingEnabled;
+    // FN key state - volatile to ensure thread safety across different handlers
+    private volatile boolean mFnState = false;
+    private EditorInfo mCurrentEditorInfo;
 
     private KeyboardState mState;
 
@@ -140,6 +143,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
 
     private void loadKeyboard(final EditorInfo editorInfo, final SettingsValues settingsValues,
             final int currentAutoCapsState, final int currentRecapitalizeState) {
+        mCurrentEditorInfo = editorInfo;
         final KeyboardLayoutSet.Builder builder = new KeyboardLayoutSet.Builder(
                 mThemeContext, editorInfo);
         final int keyboardWidth = ResourceUtils.getKeyboardWidth(mThemeContext, settingsValues);
@@ -153,6 +157,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                 .setEmojiKeyEnabled(settingsValues.mShowsEmojiKey)
                 .setSplitLayoutEnabled(settingsValues.mIsSplitKeyboardEnabled)
                 .setOneHandedModeEnabled(oneHandedModeEnabled)
+                .setFnActive(mFnState)
                 .build();
         try {
             mState.onLoadKeyboard(currentAutoCapsState, currentRecapitalizeState, oneHandedModeEnabled);
@@ -168,6 +173,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                         .setEmojiKeyEnabled(settingsValues.mShowsEmojiKey)
                         .setSplitLayoutEnabled(settingsValues.mIsSplitKeyboardEnabled)
                         .setOneHandedModeEnabled(oneHandedModeEnabled)
+                        .setFnActive(mFnState)
                         .build();
                 mState.onLoadKeyboard(currentAutoCapsState, currentRecapitalizeState, oneHandedModeEnabled);
                 showToast("error loading the keyboard, falling back to defaults", false);
@@ -236,6 +242,23 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         mState.onFinishSlidingInput(currentAutoCapsState, currentRecapitalizeState);
     }
 
+    public void setFnState(final boolean fnState) {
+        if (mFnState != fnState) {
+            mFnState = fnState;
+            // For now, just update the state without rebuilding the keyboard
+            // The FN selector system will handle the visual updates when needed
+            // Rebuilding during key press can cause crashes
+            
+            // TODO: Implement visual feedback for FN state change
+            // This could be done by invalidating specific keys or updating key labels
+            // without rebuilding the entire keyboard
+        }
+    }
+
+    public boolean isFnActive() {
+        return mFnState;
+    }
+
     // Implements {@link KeyboardState.SwitchActions}.
     @Override
     public void setAlphabetKeyboard() {
@@ -297,6 +320,15 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             Log.d(TAG, "setSymbolsShiftedKeyboard");
         }
         setKeyboard(KeyboardId.ELEMENT_SYMBOLS_SHIFTED, KeyboardSwitchState.SYMBOLS_SHIFTED);
+    }
+
+    // Toggle FN state and rebuild keyboard
+    public void toggleFnState() {
+        if (DEBUG_ACTION) {
+            Log.d(TAG, "toggleFnState");
+        }
+        // Simply toggle the FN state
+        setFnState(!mFnState);
     }
 
     public boolean isImeSuppressedByHardwareKeyboard(
@@ -760,4 +792,5 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             // in tests isInputViewShown returns true, but showWindow throws "IllegalStateException: Window token is not set yet."
         }
     }
+
 }

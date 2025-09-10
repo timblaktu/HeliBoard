@@ -1,9 +1,11 @@
 package helium314.keyboard.keyboard
 
+import android.os.Environment
 import android.text.InputType
 import android.util.SparseArray
 import android.view.KeyEvent
 import android.view.inputmethod.InputMethodSubtype
+import android.widget.Toast
 import helium314.keyboard.event.Event
 import helium314.keyboard.event.HangulEventDecoder
 import helium314.keyboard.event.HardwareEventDecoder
@@ -21,15 +23,15 @@ import helium314.keyboard.latin.common.loopOverCodePointsBackwards
 import helium314.keyboard.latin.define.ProductionFlags
 import helium314.keyboard.latin.inputlogic.InputLogic
 import helium314.keyboard.latin.settings.Settings
-import helium314.keyboard.latin.utils.Log
 import kotlin.math.abs
 import kotlin.math.min
+import java.io.File
+import java.io.FileWriter
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class KeyboardActionListenerImpl(private val latinIME: LatinIME, private val inputLogic: InputLogic) : KeyboardActionListener {
-
-    companion object {
-        private val TAG = KeyboardActionListenerImpl::class.java.simpleName
-    }
 
     private val connection = inputLogic.mConnection
     private val emojiAltPhysicalKeyDetector by lazy { EmojiAltPhysicalKeyDetector(latinIME.resources) }
@@ -126,38 +128,53 @@ class KeyboardActionListenerImpl(private val latinIME: LatinIME, private val inp
             KeyCode.TOGGLE_AUTOCORRECT -> return Settings.getInstance().toggleAutoCorrect()
             KeyCode.TOGGLE_INCOGNITO_MODE -> return Settings.getInstance().toggleAlwaysIncognitoMode()
             KeyCode.FN -> {
-                // Toggle FN state
                 try {
+                    // Debug logging to understand the issue
+                    logToFile("FN key handler entered")
+                    logToFile("keyboardSwitcher is null? ${keyboardSwitcher == null}")
+                    
+                    // Get current state and log it
                     val currentFnState = keyboardSwitcher.isFnActive()
+                    logToFile("Current FN state before toggle: $currentFnState")
+                    
+                    // Toggle the state
                     val newFnState = !currentFnState
+                    logToFile("New FN state to be set: $newFnState")
+                    
+                    // Set the new state (use non-null assertion since we know it exists)
                     keyboardSwitcher.setFnState(newFnState)
-                    // Show toast notification for FN state change
-                    val message = if (newFnState) "FN ON" else "FN OFF"
-                    keyboardSwitcher.showToast(message, true)
-                    Log.d(TAG, "FN state toggled: $newFnState")
+                    
+                    // Verify the state was actually set
+                    val actualStateAfterSet = keyboardSwitcher.isFnActive()
+                    logToFile("Actual FN state after setFnState: $actualStateAfterSet")
+                    
+                    // Log to Android log
+                    android.util.Log.d("FN", "FN key pressed, current: $currentFnState, new: $newFnState, actual: $actualStateAfterSet")
+                    
+                    // Show toast notification with actual state
+                    showToast("FN ${if (actualStateAfterSet) "ON" else "OFF"}")
                 } catch (e: Exception) {
-                    Log.e(TAG, "Failed to toggle FN state", e)
+                    android.util.Log.e("FN", "Error handling FN key: ${e.message}")
+                    logToFile("ERROR handling FN key: ${e.message}")
                 }
                 return
             }
         }
         val mkv = keyboardSwitcher.mainKeyboardView
 
-        // FN Key Remapping System
-        // When FN is active, remap regular keys to function/navigation keys
-        // This allows a compact keyboard to provide full desktop-style navigation
-        // without requiring additional rows or modifier keys
-        val fnActive = try {
-            keyboardSwitcher.isFnActive()
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to get FN state", e)
-            false
-        }
+        // Check if FN state is active and remap keys accordingly
+        // This provides immediate FN functionality without requiring keyboard rebuild
+        val fnActive = keyboardSwitcher.isFnActive()
+        logToFile("Checking FN state for remapping: $fnActive (primaryCode: $primaryCode)")
         
         val remappedCode = if (fnActive) {
-            // Map standard keys to function keys when FN is active
-            // The mappings are inspired by vim navigation and common desktop shortcuts
-            val mapped = when (primaryCode) {
+            // Log for debugging
+            val keyChar = if (primaryCode > 0) " (${primaryCode.toChar()})" else ""
+            val logMsg = "FN active ($fnActive), processing key code: $primaryCode$keyChar"
+            android.util.Log.d("FN", logMsg)
+            logToFile(logMsg)
+            
+            when (primaryCode) {
                 // hjkl = arrow keys (vim-style navigation)
                 'h'.code -> KeyCode.ARROW_LEFT      // -21
                 'j'.code -> KeyCode.ARROW_DOWN      // -24
@@ -204,47 +221,72 @@ class KeyboardActionListenerImpl(private val latinIME: LatinIME, private val inp
                 'E'.code -> KeyCode.ESCAPE              // Capital E
                 
                 else -> primaryCode // Keep original code if no mapping
+            }.also { remapped ->
+                if (remapped != primaryCode) {
+                    val remapMsg = "Remapped from $primaryCode to $remapped"
+                    android.util.Log.d("FN", remapMsg)
+                    logToFile(remapMsg)
+                    
+                    // Show what key was activated
+                    val keyName = when (remapped) {
+                        KeyCode.ARROW_LEFT -> "←"
+                        KeyCode.ARROW_RIGHT -> "→"
+                        KeyCode.ARROW_UP -> "↑"
+                        KeyCode.ARROW_DOWN -> "↓"
+                        KeyCode.F1 -> "F1"
+                        KeyCode.F2 -> "F2"
+                        KeyCode.F3 -> "F3"
+                        KeyCode.F4 -> "F4"
+                        KeyCode.F5 -> "F5"
+                        KeyCode.F6 -> "F6"
+                        KeyCode.F7 -> "F7"
+                        KeyCode.F8 -> "F8"
+                        KeyCode.F9 -> "F9"
+                        KeyCode.F10 -> "F10"
+                        KeyCode.F11 -> "F11"
+                        KeyCode.F12 -> "F12"
+                        KeyCode.MOVE_START_OF_LINE -> "Home"
+                        KeyCode.MOVE_END_OF_LINE -> "End"
+                        KeyCode.PAGE_UP -> "PgUp"
+                        KeyCode.PAGE_DOWN -> "PgDn"
+                        KeyCode.WORD_LEFT -> "Word←"
+                        KeyCode.WORD_RIGHT -> "Word→"
+                        KeyCode.INSERT -> "Insert"
+                        KeyCode.ESCAPE -> "Esc"
+                        KeyCode.CLIPBOARD_CUT -> "Cut"
+                        else -> "Code:$remapped"
+                    }
+                    showToast("FN: $keyName")
+                }
             }
-            if (mapped != primaryCode) {
-                Log.d(TAG, "FN remapping: $primaryCode -> $mapped")
-            }
-            mapped
         } else {
             primaryCode
         }
 
-        // Special Handling for Functional Keys
-        // Functional keys (negative codes) need special processing to work correctly
-        // This section ensures proper event generation and routing for navigation,
-        // function keys, and other special keys
+        // CRITICAL FIX: Handle remapped functional keys directly
+        // If we remapped to a functional key (negative code), we need to handle it specially
+        // This ensures arrow keys and other functional keys work correctly
         if (remappedCode != primaryCode && remappedCode < 0) {
+            logToFile("FN remapped to functional key, processing directly: $remappedCode")
             
             // Get the current input type to determine how to send the key
             val editorInfo = latinIME.currentInputEditorInfo
             val inputType = editorInfo?.inputType ?: InputType.TYPE_CLASS_TEXT
             val adapter = InputTypeAdapterFactory.getAdapter(inputType)
             
+            logToFile("Input type: $inputType, Using adapter: ${adapter.javaClass.simpleName}")
             
             // Try to handle navigation keys through the adapter first
             var handled = false
-            try {
-                if (isNavigationKey(remappedCode)) {
-                    handled = adapter.sendNavigationKey(connection, remappedCode, metaState)
-                    if (handled) {
-                        Log.d(TAG, "Navigation key handled by adapter: $remappedCode")
-                    }
-                } else if (isFunctionKey(remappedCode)) {
-                    val fnNumber = getFunctionKeyNumber(remappedCode)
-                    if (fnNumber != null) {
-                        handled = adapter.sendFunctionKey(connection, fnNumber)
-                        if (handled) {
-                            Log.d(TAG, "Function key F$fnNumber handled by adapter")
-                        }
-                    }
+            if (isNavigationKey(remappedCode)) {
+                handled = adapter.sendNavigationKey(connection, remappedCode, metaState)
+                logToFile("Navigation key handled by adapter: $handled")
+            } else if (isFunctionKey(remappedCode)) {
+                val fnNumber = getFunctionKeyNumber(remappedCode)
+                if (fnNumber != null) {
+                    handled = adapter.sendFunctionKey(connection, fnNumber)
+                    logToFile("Function key F$fnNumber handled by adapter: $handled")
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error handling key through adapter", e)
-                handled = false
             }
             
             // If the adapter handled it, we're done
@@ -254,6 +296,7 @@ class KeyboardActionListenerImpl(private val latinIME: LatinIME, private val inp
             
             // Otherwise, fall back to the default event handling
             val event = Event.createSoftwareKeypressEvent(remappedCode, metaState, mkv.getKeyX(x), mkv.getKeyY(y), isKeyRepeat)
+            logToFile("Functional event created - isFunctional=${event.isFunctionalKeyEvent}, keyCode=${event.mKeyCode}")
             
             // Send the event to InputLogic for proper handling
             latinIME.onEvent(event)
@@ -272,6 +315,9 @@ class KeyboardActionListenerImpl(private val latinIME: LatinIME, private val inp
 //            else Event.createSoftwareKeypressEvent(remappedCode, metaState, mkv.getKeyX(x), mkv.getKeyY(y), isKeyRepeat)
             Event.createSoftwareKeypressEvent(remappedCode, metaState, mkv.getKeyX(x), mkv.getKeyY(y), isKeyRepeat)
         }
+        
+        // Debug logging to understand event processing
+        logToFile("Event created with remappedCode=$remappedCode, isFunctional=${event.isFunctionalKeyEvent}, codePoint=${event.mCodePoint}, keyCode=${event.mKeyCode}")
         
         latinIME.onEvent(event)
     }
