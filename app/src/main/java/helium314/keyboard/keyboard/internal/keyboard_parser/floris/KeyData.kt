@@ -328,3 +328,39 @@ class KanaSelector(
         return ""
     }
 }
+
+/**
+ * Allows to select an [AbstractKeyData] based on the current FN key state. 
+ * The FN key acts as a modifier similar to shift but with simpler binary behavior.
+ * The JSON class identifier for this selector is `fn_selector`.
+ *
+ * Example usage in a layout JSON file:
+ * ```
+ * { "$": "fn_selector",
+ *   "normal": { "label": "h" },
+ *   "fn": { "code": -21, "label": "←" }
+ * }
+ * ```
+ *
+ * @property normal The key data to use when FN is not active.
+ * @property fn The key data to use when FN is active.
+ */
+@Serializable
+@SerialName("fn_selector")
+class FnSelector(
+    val normal: AbstractKeyData,
+    val fn: AbstractKeyData,
+) : AbstractKeyData {
+    override fun compute(params: KeyboardParams): KeyData? {
+        return (if (params.mId.isFnActive) { fn } else { normal }).compute(params)
+    }
+
+    override fun asString(isForDisplay: Boolean): String {
+        return if (isForDisplay) {
+            // Show both states for display purposes
+            "${normal.asString(true)}/${fn.asString(true)}"
+        } else {
+            ""
+        }
+    }
+}

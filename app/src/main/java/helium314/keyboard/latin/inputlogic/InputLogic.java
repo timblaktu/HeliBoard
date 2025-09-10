@@ -646,6 +646,12 @@ public final class InputLogic {
     private void handleFunctionalEvent(final Event event, final InputTransaction inputTransaction,
             final String currentKeyboardScript, final LatinIME.UIHandler handler) {
         final int keyCode = event.getMKeyCode();
+        
+        // Debug logging for FN key investigation
+        if (keyCode < 0 && keyCode >= -30) {
+            android.util.Log.d("FN_DEBUG", "handleFunctionalEvent: keyCode=" + keyCode + " (arrow/nav key range)");
+        }
+        
         switch (keyCode) {
             case KeyCode.DELETE:
                 handleBackspaceEvent(event, inputTransaction, currentKeyboardScript);
@@ -794,11 +800,19 @@ public final class InputLogic {
             default:
                 if (KeyCode.INSTANCE.isModifier(keyCode))
                     return; // continuation of previous switch case above, but modifiers are held in a separate place
+                
+                // Debug logging for FN key investigation
+                android.util.Log.d("FN_DEBUG", "default case: keyCode=" + keyCode + ", codePoint=" + event.getMCodePoint());
+                
                 final int keyEventCode = keyCode > 0
                     ? keyCode
                     : event.getMCodePoint() >= 0 ? KeyCode.codePointToKeyEventCode(event.getMCodePoint())
                     : KeyCode.keyCodeToKeyEventCode(keyCode);
+                
+                android.util.Log.d("FN_DEBUG", "Converted keyCode " + keyCode + " to keyEventCode " + keyEventCode);
+                
                 if (keyEventCode != KeyEvent.KEYCODE_UNKNOWN) {
+                    android.util.Log.d("FN_DEBUG", "Sending key event: " + keyEventCode + " with meta: " + event.getMMetaState());
                     sendDownUpKeyEventWithMetaState(keyEventCode, event.getMMetaState());
                     return;
                 }

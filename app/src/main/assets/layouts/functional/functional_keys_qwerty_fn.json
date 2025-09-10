@@ -1,0 +1,234 @@
+[
+  [
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "shift_state_selector",
+        "unshifted": { "label": "1" },
+        "shifted": { "label": "!" },
+        "default": { "label": "1" }
+      },
+      "fn": { "code": -10028, "label": "F1" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "shift_state_selector",
+        "unshifted": { "label": "2" },
+        "shifted": { "label": "@" },
+        "default": { "label": "2" }
+      },
+      "fn": { "code": -10029, "label": "F2" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "shift_state_selector",
+        "unshifted": { "label": "3" },
+        "shifted": { "label": "#" },
+        "default": { "label": "3" }
+      },
+      "fn": { "code": -10030, "label": "F3" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "shift_state_selector",
+        "unshifted": { "label": "4" },
+        "shifted": { "label": "$" },
+        "default": { "label": "4" }
+      },
+      "fn": { "code": -10031, "label": "F4" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "shift_state_selector",
+        "unshifted": { "label": "5" },
+        "shifted": { "label": "%" },
+        "default": { "label": "5" }
+      },
+      "fn": { "code": -10032, "label": "F5" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "shift_state_selector",
+        "unshifted": { "label": "6" },
+        "shifted": { "label": "^" },
+        "default": { "label": "6" }
+      },
+      "fn": { "code": -10033, "label": "F6" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "shift_state_selector",
+        "unshifted": { "label": "7" },
+        "shifted": { "label": "&" },
+        "default": { "label": "7" }
+      },
+      "fn": { "code": -10034, "label": "F7" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "shift_state_selector",
+        "unshifted": { "label": "8" },
+        "shifted": { "label": "*" },
+        "default": { "label": "8" }
+      },
+      "fn": { "code": -10035, "label": "F8" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "shift_state_selector",
+        "unshifted": { "label": "9" },
+        "shifted": { "label": "(" },
+        "default": { "label": "9" }
+      },
+      "fn": { "code": -10036, "label": "F9" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "shift_state_selector",
+        "unshifted": { "label": "0" },
+        "shifted": { "label": ")" },
+        "default": { "label": "0" }
+      },
+      "fn": { "code": -10037, "label": "F10" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "shift_state_selector",
+        "unshifted": { "label": "-" },
+        "shifted": { "label": "_" },
+        "default": { "label": "-" }
+      },
+      "fn": { "code": -10038, "label": "F11" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "shift_state_selector",
+        "unshifted": { "label": "=" },
+        "shifted": { "label": "+" },
+        "default": { "label": "=" }
+      },
+      "fn": { "code": -10039, "label": "F12" }
+    }
+  ],
+  [
+    { "type": "placeholder" }
+  ],
+  [
+    { "type": "placeholder" },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "shift_state_selector",
+        "unshifted": { "label": ";" },
+        "shifted": { "label": ":" },
+        "default": { "label": ";" }
+      },
+      "fn": { "code": -10010, "label": "PgUp" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "shift_state_selector",
+        "unshifted": { "label": "'" },
+        "shifted": { "label": "\"" },
+        "default": { "label": "'" }
+      },
+      "fn": { "code": -10011, "label": "PgDn" }
+    }
+  ],
+  [
+    { "code": -5, "label": "FN", "width": 0.15 },
+    { "type": "placeholder" },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "shift_state_selector",
+        "unshifted": { "label": "/" },
+        "shifted": { "label": "?" },
+        "default": { "label": "/" }
+      },
+      "fn": { "code": -10018, "label": "Menu" }
+    },
+    { "label": "shift", "width": 0.15 }
+  ],
+  [
+    { "label": "symbol_alpha", "width": 0.15 },
+    {
+      "$": "fn_selector",
+      "normal": {
+        "$": "variation_selector",
+        "default": { "label": "comma" },
+        "email": { "label": "@", "groupId": 1, "type": "function" },
+        "uri": { "label": "/", "groupId": 1, "type": "function" }
+      },
+      "fn": {
+        "$": "shift_state_selector",
+        "unshifted": { "label": "[" },
+        "shifted": { "label": "{" },
+        "default": { "label": "[" }
+      }
+    },
+    {
+      "$": "fn_selector",
+      "normal": {
+        "$": "keyboard_state_selector",
+        "languageKeyEnabled": {
+          "$": "keyboard_state_selector",
+          "alphabet": { "label": "language_switch" }
+        }
+      },
+      "fn": { "code": -10015, "label": "Home" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": {
+        "$": "keyboard_state_selector",
+        "emojiKeyEnabled": {
+          "$": "keyboard_state_selector",
+          "alphabet": { "label": "emoji" }
+        }
+      },
+      "fn": { "code": -10016, "label": "End" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": {
+        "$": "keyboard_state_selector",
+        "symbols": { "label": "numpad" }
+      },
+      "fn": { "code": -10009, "label": "Del" }
+    },
+    { "label": "space" },
+    {
+      "$": "fn_selector",
+      "normal": { "label": "period", "labelFlags": 1073741824 },
+      "fn": {
+        "$": "shift_state_selector",
+        "unshifted": { "label": "]" },
+        "shifted": { "label": "}" },
+        "default": { "label": "]" }
+      }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { "label": "action", "width": 0.15 },
+      "fn": {
+        "$": "shift_state_selector",
+        "unshifted": { "label": "\\" },
+        "shifted": { "label": "|" },
+        "default": { "label": "\\" }
+      }
+    }
+  ]
+]

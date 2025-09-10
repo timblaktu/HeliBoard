@@ -7,6 +7,7 @@ import helium314.keyboard.keyboard.internal.keyboard_parser.floris.AbstractKeyDa
 import helium314.keyboard.keyboard.internal.keyboard_parser.floris.AutoTextKeyData
 import helium314.keyboard.keyboard.internal.keyboard_parser.floris.CaseSelector
 import helium314.keyboard.keyboard.internal.keyboard_parser.floris.CharWidthSelector
+import helium314.keyboard.keyboard.internal.keyboard_parser.floris.FnSelector
 import helium314.keyboard.keyboard.internal.keyboard_parser.floris.KanaSelector
 import helium314.keyboard.keyboard.internal.keyboard_parser.floris.KeyData
 import helium314.keyboard.keyboard.internal.keyboard_parser.floris.KeyboardStateSelector
@@ -133,6 +134,7 @@ object LayoutParser {
                 subclass(LayoutDirectionSelector::class, LayoutDirectionSelector.serializer())
                 subclass(CharWidthSelector::class, CharWidthSelector.serializer())
                 subclass(KanaSelector::class, KanaSelector.serializer())
+                subclass(FnSelector::class, FnSelector.serializer())
                 defaultDeserializer { TextKeyData.serializer() }
             }
             polymorphic(KeyData::class) {
@@ -165,6 +167,7 @@ object LayoutParser {
                 subclass(LayoutDirectionSelector::class, LayoutDirectionSelector.serializer())
                 subclass(CharWidthSelector::class, CharWidthSelector.serializer())
                 subclass(KanaSelector::class, KanaSelector.serializer())
+                subclass(FnSelector::class, FnSelector.serializer())
                 defaultDeserializer { TextKeyData.serializer() }
             }
             polymorphic(KeyData::class) {

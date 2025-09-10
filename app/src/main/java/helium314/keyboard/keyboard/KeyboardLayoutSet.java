@@ -90,6 +90,7 @@ public final class KeyboardLayoutSet {
         // Indicates if the user has enabled the split-layout preference
         // and the required ProductionFlags are enabled.
         boolean mIsSplitLayoutEnabled;
+        boolean mIsFnActive;
     }
 
     public static void onSystemLocaleChanged() {
@@ -273,6 +274,11 @@ public final class KeyboardLayoutSet {
 
         public Builder setOneHandedModeEnabled(boolean enabled) {
             mParams.mOneHandedModeEnabled = enabled;
+            return this;
+        }
+
+        public Builder setFnActive(boolean fnActive) {
+            mParams.mIsFnActive = fnActive;
             return this;
         }
 

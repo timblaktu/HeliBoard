@@ -1,0 +1,242 @@
+[
+  [
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "case_selector",
+        "lower": { "label": "q" },
+        "upper": { "label": "Q" }
+      },
+      "fn": { "label": "Q" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "case_selector",
+        "lower": { "label": "w" },
+        "upper": { "label": "W" }
+      },
+      "fn": { "code": -10021, "label": "w" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "case_selector",
+        "lower": { "label": "e" },
+        "upper": { "label": "E" }
+      },
+      "fn": { "code": -10021, "label": "e" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "case_selector",
+        "lower": { "label": "r" },
+        "upper": { "label": "R" }
+      },
+      "fn": { "label": "R" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "case_selector",
+        "lower": { "label": "t" },
+        "upper": { "label": "T" }
+      },
+      "fn": { "label": "T" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "case_selector",
+        "lower": { "label": "y" },
+        "upper": { "label": "Y" }
+      },
+      "fn": { "label": "y" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "case_selector",
+        "lower": { "label": "u" },
+        "upper": { "label": "U" }
+      },
+      "fn": { "code": -10010, "label": "u" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "case_selector",
+        "lower": { "label": "i" },
+        "upper": { "label": "I" }
+      },
+      "fn": { "code": -10013, "label": "i" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "case_selector",
+        "lower": { "label": "o" },
+        "upper": { "label": "O" }
+      },
+      "fn": { "code": -10016, "label": "o" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "case_selector",
+        "lower": { "label": "p" },
+        "upper": { "label": "P" }
+      },
+      "fn": { "label": "p" }
+    }
+  ],
+  [
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "case_selector",
+        "lower": { "label": "a" },
+        "upper": { "label": "A" }
+      },
+      "fn": { "code": -10016, "label": "a" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "case_selector",
+        "lower": { "label": "s" },
+        "upper": { "label": "S" }
+      },
+      "fn": { "label": "S" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "case_selector",
+        "lower": { "label": "d" },
+        "upper": { "label": "D" }
+      },
+      "fn": { "code": -10011, "label": "d" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "case_selector",
+        "lower": { "label": "f" },
+        "upper": { "label": "F" }
+      },
+      "fn": { "code": -10011, "label": "f" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "case_selector",
+        "lower": { "label": "g" },
+        "upper": { "label": "G" }
+      },
+      "fn": { "code": -10015, "label": "g" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "case_selector",
+        "lower": { "label": "h" },
+        "upper": { "label": "H" }
+      },
+      "fn": { "code": -21, "label": "h" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "case_selector",
+        "lower": { "label": "j" },
+        "upper": { "label": "J" }
+      },
+      "fn": { "code": -24, "label": "j" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "case_selector",
+        "lower": { "label": "k" },
+        "upper": { "label": "K" }
+      },
+      "fn": { "code": -23, "label": "k" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "case_selector",
+        "lower": { "label": "l" },
+        "upper": { "label": "L" }
+      },
+      "fn": { "code": -22, "label": "l" }
+    }
+  ],
+  [
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "case_selector",
+        "lower": { "label": "z" },
+        "upper": { "label": "Z" }
+      },
+      "fn": { "label": "Z" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "case_selector",
+        "lower": { "label": "x" },
+        "upper": { "label": "X" }
+      },
+      "fn": { "code": -10009, "label": "x" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "case_selector",
+        "lower": { "label": "c" },
+        "upper": { "label": "C" }
+      },
+      "fn": { "label": "C" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "case_selector",
+        "lower": { "label": "v" },
+        "upper": { "label": "V" }
+      },
+      "fn": { "label": "V" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "case_selector",
+        "lower": { "label": "b" },
+        "upper": { "label": "B" }
+      },
+      "fn": { "code": -10020, "label": "b" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "case_selector",
+        "lower": { "label": "n" },
+        "upper": { "label": "N" }
+      },
+      "fn": { "label": "N" }
+    },
+    {
+      "$": "fn_selector",
+      "normal": { 
+        "$": "case_selector",
+        "lower": { "label": "m" },
+        "upper": { "label": "M" }
+      },
+      "fn": { "label": "M" }
+    }
+  ]
+]
