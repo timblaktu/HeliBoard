@@ -68,12 +68,204 @@ runs-on: ubuntu-latest  # Could be x86_64 OR ARM64
 runs-on: ubuntu-22.04   # Guaranteed x86_64 (updated from ubuntu-20.04 due to Feb 2025 deprecation)
 ```
 
-### Alternative Options Considered
+## Decision Evolution and Rationale
 
-1. **`ubuntu-latest-4-cores`**: Forces x86_64 but requires paid plan
-2. **Robolectric legacy mode**: Universal but 3-5x slower tests  
-3. **`ubuntu-20.04`**: Initially chosen, but **deprecated Feb 2025** causing queue delays
-4. **`ubuntu-22.04`**: **Final choice** - guaranteed x86_64, actively supported, no queue issues
+### Solution Progression
+
+**Stage 1: `ubuntu-latest` (Upstream)**
+```yaml
+runs-on: ubuntu-latest  # Implicit, unpredictable
+```
+✅ **Pros**: Simple, "latest" sounds future-proof  
+❌ **Cons**: Non-deterministic architecture, hidden CI frequency dependency
+
+**Stage 2: `ubuntu-20.04` (Our Initial Fix)**  
+```yaml
+runs-on: ubuntu-20.04  # Explicit x86_64, but deprecated
+```
+✅ **Pros**: Guaranteed x86_64, fixed Robolectric issue  
+❌ **Cons**: Deprecated Feb 2025 → 15+ min queue delays, limited future
+
+**Stage 3: `ubuntu-22.04` (Final Solution)**
+```yaml
+runs-on: ubuntu-22.04  # Explicit x86_64, actively supported
+```
+✅ **Pros**: Guaranteed x86_64, immediate availability, supported until ~2027  
+❌ **Cons**: Hard-coded version requires future maintenance
+
+### Alternative Solutions Considered
+
+#### **Option 1: `ubuntu-latest-4-cores`**
+```yaml
+runs-on: ubuntu-latest-4-cores
+```
+✅ **Pros**: Forces x86_64, more CPU power  
+❌ **Cons**: Requires GitHub paid plan, cost implications  
+❌ **Cons**: Still implicit version, future architecture risk
+
+#### **Option 2: Robolectric Legacy Mode**
+```kotlin
+android {
+    testOptions {
+        unitTests {
+            all {
+                it.systemProperty("robolectric.enabledSdks", "28,29,30,31,32,33")
+                it.systemProperty("robolectric.offline", "true")
+            }
+        }
+    }
+}
+```
+✅ **Pros**: Universal architecture compatibility  
+❌ **Cons**: 3-5x slower test execution, worse developer experience  
+❌ **Cons**: Doesn't match upstream performance characteristics
+
+#### **Option 3: Dynamic Architecture Detection**
+```yaml
+steps:
+  - name: Detect Architecture
+    run: |
+      if [[ $(uname -m) == "aarch64" ]]; then
+        echo "ROBOLECTRIC_LEGACY=true" >> $GITHUB_ENV
+      fi
+```
+✅ **Pros**: Automatically adapts to runner type  
+❌ **Cons**: Complex logic, inconsistent test environment  
+❌ **Cons**: Still allows non-deterministic architecture assignment
+
+#### **Option 4: Matrix Strategy**  
+```yaml
+strategy:
+  matrix:
+    os: [ubuntu-22.04]
+    # Future: Could add ubuntu-24.04, macos-latest for broader testing
+```
+✅ **Pros**: Explicit, expandable for multi-platform testing  
+❌ **Cons**: Overkill for current single-platform needs  
+❌ **Cons**: Increased CI resource usage
+
+## Hard-Coding vs Alternatives: Deep Analysis
+
+### **Why Hard-Coding `ubuntu-22.04` Was Chosen**
+
+#### ✅ **Arguments FOR Hard-Coding**
+
+**1. Deterministic Behavior**
+- **Guarantee**: Every CI run uses identical environment  
+- **Benefit**: Eliminates architecture-dependent flakiness
+- **Evidence**: Upstream consistency (they effectively hard-code x86_64 by accident)
+
+**2. Performance Predictability**  
+- **Robolectric Native**: Guaranteed fast test execution
+- **Benchmark**: 3-5x faster than legacy mode
+- **Developer Experience**: Consistent local vs CI performance expectations
+
+**3. Dependency Transparency**
+- **Explicit**: No hidden factors affecting runner assignment
+- **Debuggable**: Architecture issues immediately obvious
+- **Maintainable**: Clear upgrade path when version support ends
+
+**4. Upstream Parity**
+- **Goal**: Match upstream test environment exactly
+- **Reality**: Upstream gets x86_64 by coincidence (low CI frequency)
+- **Alignment**: Explicit configuration achieves same result reliably
+
+#### ❌ **Arguments AGAINST Hard-Coding**
+
+**1. Maintenance Burden**
+- **Timeline**: Requires update when ubuntu-22.04 approaches deprecation (~2027)
+- **Process**: Must monitor GitHub's OS support lifecycle
+- **Risk**: Potential queue delays if deprecation catches us off-guard again
+
+**2. Technology Lag**
+- **Innovation**: Might miss performance improvements in newer Ubuntu versions
+- **Security**: Delayed access to latest security patches (though GitHub backports critical fixes)
+- **Ecosystem**: Potential incompatibility with bleeding-edge tools
+
+**3. False Precision**
+- **Criticism**: Over-specifying for what might be a temporary architecture transition period
+- **Alternative**: GitHub might improve ubuntu-latest assignment consistency
+- **Philosophy**: Fighting symptoms vs root cause
+
+### **Alternative Strategies Evaluated**
+
+#### **Strategy A: Adaptive Configuration**
+```yaml
+# Use ubuntu-latest but with fallback detection
+runs-on: ubuntu-latest
+steps:
+  - name: Verify x86_64 or Fallback
+    run: |
+      if [[ $(uname -m) != "x86_64" ]]; then
+        echo "❌ ARM64 detected, enabling legacy mode"
+        echo "ROBOLECTRIC_LEGACY=true" >> $GITHUB_ENV
+      fi
+```
+
+**Analysis**:
+- ✅ **Flexible**: Adapts to GitHub's runner assignment changes
+- ✅ **Future-proof**: Automatically handles ubuntu-latest evolution  
+- ❌ **Complex**: Adds conditional logic to CI pipeline
+- ❌ **Inconsistent**: Different test performance depending on runner luck
+- ❌ **Debug overhead**: Architecture-dependent failures harder to reproduce
+
+#### **Strategy B: Version Matrix with Fallback**
+```yaml
+strategy:
+  matrix:
+    runs-on: [ubuntu-22.04, ubuntu-latest]
+    exclude:
+      - runs-on: ubuntu-latest
+        # Only use ubuntu-latest if ubuntu-22.04 unavailable
+```
+
+**Analysis**:
+- ✅ **Resilient**: Backup if specific version has issues
+- ✅ **Testing**: Validates compatibility across versions
+- ❌ **Overhead**: 2x CI resource usage  
+- ❌ **Complexity**: Matrix logic and conditional exclusion rules
+- ❌ **Mixed results**: Harder to interpret which configuration failed
+
+#### **Strategy C: External Runner Management**
+```yaml
+# Use organization-level self-hosted runners
+runs-on: [self-hosted, linux, x64]
+```
+
+**Analysis**:
+- ✅ **Control**: Complete environment control
+- ✅ **Performance**: Potentially faster, dedicated resources
+- ❌ **Cost**: Infrastructure management overhead
+- ❌ **Security**: Self-hosted runner security considerations  
+- ❌ **Overkill**: Excessive for this specific architecture requirement
+
+### **Decision Matrix**
+
+| Solution | Determinism | Performance | Maintenance | Future-Proof | Complexity |
+|----------|-------------|-------------|-------------|--------------|------------|
+| **ubuntu-22.04** (chosen) | ✅ High | ✅ High | ⚠️ Medium | ✅ High | ✅ Low |
+| ubuntu-latest | ❌ Low | ⚠️ Variable | ✅ Low | ❌ Low | ✅ Low |
+| Adaptive config | ⚠️ Medium | ⚠️ Variable | ⚠️ Medium | ✅ High | ❌ High |
+| Version matrix | ✅ High | ✅ High | ❌ High | ✅ High | ❌ High |
+| Self-hosted | ✅ High | ✅ High | ❌ Very High | ✅ High | ❌ Very High |
+
+### **Long-term Strategy**
+
+**Current Decision (2025-2027)**: Hard-code `ubuntu-22.04`
+- **Rationale**: Maximize stability during critical development period
+- **Review Point**: 2026 Q4 (before ubuntu-22.04 deprecation)
+
+**Future Migration Path**:
+1. **Monitor**: GitHub's ubuntu-latest assignment improvements
+2. **Evaluate**: ARM64 Robolectric native runtime support progress  
+3. **Consider**: Migration to ubuntu-24.04 or back to ubuntu-latest if deterministic
+4. **Timeline**: Reassess strategy 6 months before ubuntu-22.04 deprecation
+
+**Monitoring Triggers**:
+- GitHub announces ubuntu-latest assignment algorithm changes
+- Robolectric releases ARM64 native runtime support
+- Ubuntu 22.04 deprecation timeline announced
+- Significant CI cost or performance changes
 
 ## Files Modified
 
