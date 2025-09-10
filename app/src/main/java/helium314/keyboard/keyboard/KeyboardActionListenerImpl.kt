@@ -1,11 +1,9 @@
 package helium314.keyboard.keyboard
 
-import android.os.Environment
 import android.text.InputType
 import android.util.SparseArray
 import android.view.KeyEvent
 import android.view.inputmethod.InputMethodSubtype
-import android.widget.Toast
 import helium314.keyboard.event.Event
 import helium314.keyboard.event.HangulEventDecoder
 import helium314.keyboard.event.HardwareEventDecoder
@@ -23,15 +21,15 @@ import helium314.keyboard.latin.common.loopOverCodePointsBackwards
 import helium314.keyboard.latin.define.ProductionFlags
 import helium314.keyboard.latin.inputlogic.InputLogic
 import helium314.keyboard.latin.settings.Settings
+import helium314.keyboard.latin.utils.Log
 import kotlin.math.abs
 import kotlin.math.min
-import java.io.File
-import java.io.FileWriter
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 class KeyboardActionListenerImpl(private val latinIME: LatinIME, private val inputLogic: InputLogic) : KeyboardActionListener {
+
+    companion object {
+        private val TAG = KeyboardActionListenerImpl::class.java.simpleName
+    }
 
     private val connection = inputLogic.mConnection
     private val emojiAltPhysicalKeyDetector by lazy { EmojiAltPhysicalKeyDetector(latinIME.resources) }
@@ -129,8 +127,17 @@ class KeyboardActionListenerImpl(private val latinIME: LatinIME, private val inp
             KeyCode.TOGGLE_INCOGNITO_MODE -> return Settings.getInstance().toggleAlwaysIncognitoMode()
             KeyCode.FN -> {
                 // Toggle FN state
-                val currentFnState = keyboardSwitcher.isFnActive()
-                keyboardSwitcher.setFnState(!currentFnState)
+                try {
+                    val currentFnState = keyboardSwitcher.isFnActive()
+                    val newFnState = !currentFnState
+                    keyboardSwitcher.setFnState(newFnState)
+                    // Show toast notification for FN state change
+                    val message = if (newFnState) "FN ON" else "FN OFF"
+                    keyboardSwitcher.showToast(message, true)
+                    Log.d(TAG, "FN state toggled: $newFnState")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to toggle FN state", e)
+                }
                 return
             }
         }
@@ -140,12 +147,17 @@ class KeyboardActionListenerImpl(private val latinIME: LatinIME, private val inp
         // When FN is active, remap regular keys to function/navigation keys
         // This allows a compact keyboard to provide full desktop-style navigation
         // without requiring additional rows or modifier keys
-        val fnActive = keyboardSwitcher.isFnActive()
+        val fnActive = try {
+            keyboardSwitcher.isFnActive()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to get FN state", e)
+            false
+        }
         
         val remappedCode = if (fnActive) {
             // Map standard keys to function keys when FN is active
             // The mappings are inspired by vim navigation and common desktop shortcuts
-            when (primaryCode) {
+            val mapped = when (primaryCode) {
                 // hjkl = arrow keys (vim-style navigation)
                 'h'.code -> KeyCode.ARROW_LEFT      // -21
                 'j'.code -> KeyCode.ARROW_DOWN      // -24
@@ -193,6 +205,10 @@ class KeyboardActionListenerImpl(private val latinIME: LatinIME, private val inp
                 
                 else -> primaryCode // Keep original code if no mapping
             }
+            if (mapped != primaryCode) {
+                Log.d(TAG, "FN remapping: $primaryCode -> $mapped")
+            }
+            mapped
         } else {
             primaryCode
         }
@@ -211,13 +227,24 @@ class KeyboardActionListenerImpl(private val latinIME: LatinIME, private val inp
             
             // Try to handle navigation keys through the adapter first
             var handled = false
-            if (isNavigationKey(remappedCode)) {
-                handled = adapter.sendNavigationKey(connection, remappedCode, metaState)
-            } else if (isFunctionKey(remappedCode)) {
-                val fnNumber = getFunctionKeyNumber(remappedCode)
-                if (fnNumber != null) {
-                    handled = adapter.sendFunctionKey(connection, fnNumber)
+            try {
+                if (isNavigationKey(remappedCode)) {
+                    handled = adapter.sendNavigationKey(connection, remappedCode, metaState)
+                    if (handled) {
+                        Log.d(TAG, "Navigation key handled by adapter: $remappedCode")
+                    }
+                } else if (isFunctionKey(remappedCode)) {
+                    val fnNumber = getFunctionKeyNumber(remappedCode)
+                    if (fnNumber != null) {
+                        handled = adapter.sendFunctionKey(connection, fnNumber)
+                        if (handled) {
+                            Log.d(TAG, "Function key F$fnNumber handled by adapter")
+                        }
+                    }
                 }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error handling key through adapter", e)
+                handled = false
             }
             
             // If the adapter handled it, we're done
@@ -245,8 +272,6 @@ class KeyboardActionListenerImpl(private val latinIME: LatinIME, private val inp
 //            else Event.createSoftwareKeypressEvent(remappedCode, metaState, mkv.getKeyX(x), mkv.getKeyY(y), isKeyRepeat)
             Event.createSoftwareKeypressEvent(remappedCode, metaState, mkv.getKeyX(x), mkv.getKeyY(y), isKeyRepeat)
         }
-        
-        // Debug logging to understand event processing
         
         latinIME.onEvent(event)
     }
