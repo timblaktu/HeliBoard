@@ -15,7 +15,8 @@ jobs:
   build:
     # Explicitly use x86_64 runners to ensure Robolectric native runtime compatibility
     # and match upstream architecture (see CI_RUNNER_ARCHITECTURE.md for details)
-    runs-on: ubuntu-20.04
+    # Using ubuntu-22.04 instead of ubuntu-20.04 (deprecated Feb 2025)  
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@v4
