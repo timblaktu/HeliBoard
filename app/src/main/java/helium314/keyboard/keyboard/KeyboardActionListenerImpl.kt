@@ -1,9 +1,11 @@
 package helium314.keyboard.keyboard
 
+import android.os.Environment
 import android.text.InputType
 import android.util.SparseArray
 import android.view.KeyEvent
 import android.view.inputmethod.InputMethodSubtype
+import android.widget.Toast
 import helium314.keyboard.event.Event
 import helium314.keyboard.event.HangulEventDecoder
 import helium314.keyboard.event.HardwareEventDecoder
@@ -23,6 +25,11 @@ import helium314.keyboard.latin.inputlogic.InputLogic
 import helium314.keyboard.latin.settings.Settings
 import kotlin.math.abs
 import kotlin.math.min
+import java.io.File
+import java.io.FileWriter
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class KeyboardActionListenerImpl(private val latinIME: LatinIME, private val inputLogic: InputLogic) : KeyboardActionListener {
 
@@ -115,67 +122,230 @@ class KeyboardActionListenerImpl(private val latinIME: LatinIME, private val inp
         return false
     }
 
+    private fun logToFile(message: String) {
+        try {
+            // Use Download folder which is accessible to both HeliBoard and Termux
+            // This is the ONLY shared location that works on Android 10+ without root
+            val downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            if (downloadDir != null) {
+                // Create a HeliBoard subdirectory in Downloads for organization
+                val heliboardDir = File(downloadDir, "HeliBoard")
+                if (!heliboardDir.exists()) {
+                    heliboardDir.mkdirs()
+                }
+                
+                val logFile = File(heliboardDir, "FN_Debug.log")
+                val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US).format(Date())
+                
+                // Write to the log file
+                FileWriter(logFile, true).use { writer ->
+                    writer.appendLine("[$timestamp] $message")
+                }
+                
+                // Also log success periodically for debugging
+                if (message.contains("FN key pressed")) {
+                    android.util.Log.d("FN", "Successfully wrote to: ${logFile.absolutePath}")
+                }
+            } else {
+                android.util.Log.e("FN", "Download directory is null")
+            }
+        } catch (e: Exception) {
+            // Log error to Android log if file writing fails
+            android.util.Log.e("FN", "Failed to write to log file: ${e.message}")
+            e.printStackTrace()
+        }
+    }
+
+    private fun showToast(message: String) {
+        try {
+            val handler = android.os.Handler(android.os.Looper.getMainLooper())
+            handler.post {
+                Toast.makeText(latinIME, message, Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: Exception) {
+            // Silently fail if can't show toast
+        }
+    }
+
     override fun onCodeInput(primaryCode: Int, x: Int, y: Int, isKeyRepeat: Boolean) {
         when (primaryCode) {
             KeyCode.TOGGLE_AUTOCORRECT -> return Settings.getInstance().toggleAutoCorrect()
             KeyCode.TOGGLE_INCOGNITO_MODE -> return Settings.getInstance().toggleAlwaysIncognitoMode()
+            KeyCode.FN -> {
+                try {
+                    // Debug logging to understand the issue
+                    logToFile("FN key handler entered")
+                    logToFile("keyboardSwitcher is null? ${keyboardSwitcher == null}")
+                    
+                    // Get current state and log it
+                    val currentFnState = keyboardSwitcher.isFnActive()
+                    logToFile("Current FN state before toggle: $currentFnState")
+                    
+                    // Toggle the state
+                    val newFnState = !currentFnState
+                    logToFile("New FN state to be set: $newFnState")
+                    
+                    // Set the new state (use non-null assertion since we know it exists)
+                    keyboardSwitcher.setFnState(newFnState)
+                    
+                    // Verify the state was actually set
+                    val actualStateAfterSet = keyboardSwitcher.isFnActive()
+                    logToFile("Actual FN state after setFnState: $actualStateAfterSet")
+                    
+                    // Log to Android log
+                    android.util.Log.d("FN", "FN key pressed, current: $currentFnState, new: $newFnState, actual: $actualStateAfterSet")
+                    
+                    // Show toast notification with actual state
+                    showToast("FN ${if (actualStateAfterSet) "ON" else "OFF"}")
+                } catch (e: Exception) {
+                    android.util.Log.e("FN", "Error handling FN key: ${e.message}")
+                    logToFile("ERROR handling FN key: ${e.message}")
+                }
+                return
+            }
         }
         val mkv = keyboardSwitcher.mainKeyboardView
 
-        // FN key remapping is now handled by FnSelector in JSON layouts
-        // The hardcoded remapping below is disabled in favor of the selector system
-        val remappedCode = primaryCode
+        // Check if FN state is active and remap keys accordingly
+        // This provides immediate FN functionality without requiring keyboard rebuild
+        val fnActive = keyboardSwitcher.isFnActive()
+        logToFile("Checking FN state for remapping: $fnActive (primaryCode: $primaryCode)")
         
-        /* // Original hardcoded FN remapping (kept for reference)
-        val remappedCode = if ((metaState and KeyEvent.META_FUNCTION_ON) != 0) {
+        val remappedCode = if (fnActive) {
+            // Log for debugging
+            val keyChar = if (primaryCode > 0) " (${primaryCode.toChar()})" else ""
+            val logMsg = "FN active ($fnActive), processing key code: $primaryCode$keyChar"
+            android.util.Log.d("FN", logMsg)
+            logToFile(logMsg)
+            
             when (primaryCode) {
                 // hjkl = arrow keys (vim-style navigation)
-                'h'.code -> KeyCode.ARROW_LEFT
-                'j'.code -> KeyCode.ARROW_DOWN
-                'k'.code -> KeyCode.ARROW_UP
-                'l'.code -> KeyCode.ARROW_RIGHT
-                'H'.code -> KeyCode.ARROW_LEFT  // Capital H
-                'J'.code -> KeyCode.ARROW_DOWN   // Capital J
-                'K'.code -> KeyCode.ARROW_UP     // Capital K
-                'L'.code -> KeyCode.ARROW_RIGHT  // Capital L
+                'h'.code -> KeyCode.ARROW_LEFT      // -21
+                'j'.code -> KeyCode.ARROW_DOWN      // -24
+                'k'.code -> KeyCode.ARROW_UP        // -23
+                'l'.code -> KeyCode.ARROW_RIGHT     // -22
+                'H'.code -> KeyCode.ARROW_LEFT      // Capital H
+                'J'.code -> KeyCode.ARROW_DOWN      // Capital J
+                'K'.code -> KeyCode.ARROW_UP        // Capital K
+                'L'.code -> KeyCode.ARROW_RIGHT     // Capital L
                 
-                // Numbers = F1-F10
-                '1'.code -> KeyCode.F1
-                '2'.code -> KeyCode.F2
-                '3'.code -> KeyCode.F3
-                '4'.code -> KeyCode.F4
-                '5'.code -> KeyCode.F5
-                '6'.code -> KeyCode.F6
-                '7'.code -> KeyCode.F7
-                '8'.code -> KeyCode.F8
-                '9'.code -> KeyCode.F9
-                '0'.code -> KeyCode.F10
-                '-'.code -> KeyCode.F11
-                '='.code -> KeyCode.F12
+                // Numbers = F1-F12
+                '1'.code -> KeyCode.F1              // -10028
+                '2'.code -> KeyCode.F2              // -10029
+                '3'.code -> KeyCode.F3              // -10030
+                '4'.code -> KeyCode.F4              // -10031
+                '5'.code -> KeyCode.F5              // -10032
+                '6'.code -> KeyCode.F6              // -10033
+                '7'.code -> KeyCode.F7              // -10034
+                '8'.code -> KeyCode.F8              // -10035
+                '9'.code -> KeyCode.F9              // -10036
+                '0'.code -> KeyCode.F10             // -10037
+                '-'.code -> KeyCode.F11             // -10038
+                '='.code -> KeyCode.F12             // -10039
                 
                 // Navigation keys
-                '['.code -> KeyCode.MOVE_START_OF_LINE  // Home
-                ']'.code -> KeyCode.MOVE_END_OF_LINE    // End
-                ';'.code -> KeyCode.PAGE_UP
-                '\''.code -> KeyCode.PAGE_DOWN
+                '['.code -> KeyCode.MOVE_START_OF_LINE  // -27 (Home)
+                ']'.code -> KeyCode.MOVE_END_OF_LINE    // -28 (End)
+                ';'.code -> KeyCode.PAGE_UP             // -10010
+                '\''.code -> KeyCode.PAGE_DOWN          // -10011
                 
                 // Word navigation
-                'u'.code -> KeyCode.WORD_LEFT
-                'i'.code -> KeyCode.WORD_RIGHT
-                'U'.code -> KeyCode.WORD_LEFT   // Capital U
-                'I'.code -> KeyCode.WORD_RIGHT  // Capital I
+                'u'.code -> KeyCode.WORD_LEFT           // -10015
+                'i'.code -> KeyCode.WORD_RIGHT          // -10016
+                'U'.code -> KeyCode.WORD_LEFT           // Capital U
+                'I'.code -> KeyCode.WORD_RIGHT          // Capital I
                 
                 // Other useful mappings
-                'p'.code -> KeyCode.INSERT
-                'P'.code -> KeyCode.INSERT       // Capital P
-                '\\'.code -> KeyCode.DELETE     // Backslash = Delete (forward delete)
+                'p'.code -> KeyCode.INSERT              // -10018
+                'P'.code -> KeyCode.INSERT              // Capital P
+                '\\'.code -> KeyCode.CLIPBOARD_CUT      // Use CUT as forward delete alternative
+                
+                // Escape key
+                'e'.code -> KeyCode.ESCAPE              // -10017
+                'E'.code -> KeyCode.ESCAPE              // Capital E
                 
                 else -> primaryCode // Keep original code if no mapping
+            }.also { remapped ->
+                if (remapped != primaryCode) {
+                    val remapMsg = "Remapped from $primaryCode to $remapped"
+                    android.util.Log.d("FN", remapMsg)
+                    logToFile(remapMsg)
+                    
+                    // Show what key was activated
+                    val keyName = when (remapped) {
+                        KeyCode.ARROW_LEFT -> "←"
+                        KeyCode.ARROW_RIGHT -> "→"
+                        KeyCode.ARROW_UP -> "↑"
+                        KeyCode.ARROW_DOWN -> "↓"
+                        KeyCode.F1 -> "F1"
+                        KeyCode.F2 -> "F2"
+                        KeyCode.F3 -> "F3"
+                        KeyCode.F4 -> "F4"
+                        KeyCode.F5 -> "F5"
+                        KeyCode.F6 -> "F6"
+                        KeyCode.F7 -> "F7"
+                        KeyCode.F8 -> "F8"
+                        KeyCode.F9 -> "F9"
+                        KeyCode.F10 -> "F10"
+                        KeyCode.F11 -> "F11"
+                        KeyCode.F12 -> "F12"
+                        KeyCode.MOVE_START_OF_LINE -> "Home"
+                        KeyCode.MOVE_END_OF_LINE -> "End"
+                        KeyCode.PAGE_UP -> "PgUp"
+                        KeyCode.PAGE_DOWN -> "PgDn"
+                        KeyCode.WORD_LEFT -> "Word←"
+                        KeyCode.WORD_RIGHT -> "Word→"
+                        KeyCode.INSERT -> "Insert"
+                        KeyCode.ESCAPE -> "Esc"
+                        KeyCode.CLIPBOARD_CUT -> "Cut"
+                        else -> "Code:$remapped"
+                    }
+                    showToast("FN: $keyName")
+                }
             }
         } else {
             primaryCode
         }
-        */
+
+        // CRITICAL FIX: Handle remapped functional keys directly
+        // If we remapped to a functional key (negative code), we need to handle it specially
+        // This ensures arrow keys and other functional keys work correctly
+        if (remappedCode != primaryCode && remappedCode < 0) {
+            logToFile("FN remapped to functional key, processing directly: $remappedCode")
+            
+            // Get the current input type to determine how to send the key
+            val editorInfo = latinIME.currentInputEditorInfo
+            val inputType = editorInfo?.inputType ?: InputType.TYPE_CLASS_TEXT
+            val adapter = InputTypeAdapterFactory.getAdapter(inputType)
+            
+            logToFile("Input type: $inputType, Using adapter: ${adapter.javaClass.simpleName}")
+            
+            // Try to handle navigation keys through the adapter first
+            var handled = false
+            if (isNavigationKey(remappedCode)) {
+                handled = adapter.sendNavigationKey(connection, remappedCode, metaState)
+                logToFile("Navigation key handled by adapter: $handled")
+            } else if (isFunctionKey(remappedCode)) {
+                val fnNumber = getFunctionKeyNumber(remappedCode)
+                if (fnNumber != null) {
+                    handled = adapter.sendFunctionKey(connection, fnNumber)
+                    logToFile("Function key F$fnNumber handled by adapter: $handled")
+                }
+            }
+            
+            // If the adapter handled it, we're done
+            if (handled) {
+                return
+            }
+            
+            // Otherwise, fall back to the default event handling
+            val event = Event.createSoftwareKeypressEvent(remappedCode, metaState, mkv.getKeyX(x), mkv.getKeyY(y), isKeyRepeat)
+            logToFile("Functional event created - isFunctional=${event.isFunctionalKeyEvent}, keyCode=${event.mKeyCode}")
+            
+            // Send the event to InputLogic for proper handling
+            latinIME.onEvent(event)
+            return  // CRITICAL: Return early to prevent double processing
+        }
 
         // checking if the character is a combining accent
         val event = if (remappedCode in combiningRange) { // todo: should this be done later, maybe in inputLogic?
@@ -189,6 +359,10 @@ class KeyboardActionListenerImpl(private val latinIME: LatinIME, private val inp
 //            else Event.createSoftwareKeypressEvent(remappedCode, metaState, mkv.getKeyX(x), mkv.getKeyY(y), isKeyRepeat)
             Event.createSoftwareKeypressEvent(remappedCode, metaState, mkv.getKeyX(x), mkv.getKeyY(y), isKeyRepeat)
         }
+        
+        // Debug logging to understand event processing
+        logToFile("Event created with remappedCode=$remappedCode, isFunctional=${event.isFunctionalKeyEvent}, codePoint=${event.mCodePoint}, keyCode=${event.mKeyCode}")
+        
         latinIME.onEvent(event)
     }
 
@@ -398,5 +572,40 @@ class KeyboardActionListenerImpl(private val latinIME: LatinIME, private val inp
         val newDecoder = HardwareKeyboardEventDecoder(deviceId)
         hardwareEventDecoders.put(deviceId, newDecoder)
         return newDecoder
+    }
+    
+    // Helper functions for InputTypeAdapter integration
+    private fun isNavigationKey(keyCode: Int): Boolean {
+        return keyCode in listOf(
+            KeyCode.ARROW_UP, KeyCode.ARROW_DOWN, KeyCode.ARROW_LEFT, KeyCode.ARROW_RIGHT,
+            KeyCode.MOVE_START_OF_LINE, KeyCode.MOVE_END_OF_LINE,
+            KeyCode.MOVE_START_OF_PAGE, KeyCode.MOVE_END_OF_PAGE,
+            KeyCode.PAGE_UP, KeyCode.PAGE_DOWN,
+            KeyCode.WORD_LEFT, KeyCode.WORD_RIGHT,
+            KeyCode.INSERT, KeyCode.CLIPBOARD_CUT,  // Using CUT as forward delete
+            KeyCode.ESCAPE, KeyCode.TAB
+        )
+    }
+    
+    private fun isFunctionKey(keyCode: Int): Boolean {
+        return keyCode in -10039..-10028 // F1 to F12
+    }
+    
+    private fun getFunctionKeyNumber(keyCode: Int): Int? {
+        return when (keyCode) {
+            -10028 -> 1   // F1
+            -10029 -> 2   // F2
+            -10030 -> 3   // F3
+            -10031 -> 4   // F4
+            -10032 -> 5   // F5
+            -10033 -> 6   // F6
+            -10034 -> 7   // F7
+            -10035 -> 8   // F8
+            -10036 -> 9   // F9
+            -10037 -> 10  // F10
+            -10038 -> 11  // F11
+            -10039 -> 12  // F12
+            else -> null
+        }
     }
 }

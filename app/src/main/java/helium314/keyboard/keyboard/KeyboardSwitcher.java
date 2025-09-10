@@ -71,7 +71,8 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
     private LatinIME mLatinIME;
     private RichInputMethodManager mRichImm;
     private boolean mIsHardwareAcceleratedDrawingEnabled;
-    private boolean mFnState = false;
+    // FN key state - volatile to ensure thread safety across different handlers
+    private volatile boolean mFnState = false;
     private EditorInfo mCurrentEditorInfo;
 
     private KeyboardState mState;
@@ -244,31 +245,13 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
     public void setFnState(final boolean fnState) {
         if (mFnState != fnState) {
             mFnState = fnState;
-            // Trigger keyboard recreation with new FN state
-            if (mKeyboardLayoutSet != null && mCurrentEditorInfo != null) {
-                final SettingsValues settingsValues = Settings.getValues();
-                final int keyboardWidth = ResourceUtils.getKeyboardWidth(mThemeContext, settingsValues);
-                final int keyboardHeight = ResourceUtils.getKeyboardHeight(mThemeContext.getResources(), settingsValues);
-                
-                // Rebuild keyboard layout set with FN state
-                mKeyboardLayoutSet = new KeyboardLayoutSet.Builder(mThemeContext, mCurrentEditorInfo)
-                        .setKeyboardGeometry(keyboardWidth, keyboardHeight)
-                        .setSubtype(mRichImm.getCurrentSubtype())
-                        .setVoiceInputKeyEnabled(settingsValues.mShowsVoiceInputKey)
-                        .setNumberRowEnabled(settingsValues.mShowsNumberRow)
-                        .setLanguageSwitchKeyEnabled(settingsValues.isLanguageSwitchKeyEnabled())
-                        .setEmojiKeyEnabled(settingsValues.mShowsEmojiKey)
-                        .setSplitLayoutEnabled(settingsValues.mIsSplitKeyboardEnabled)
-                        .setOneHandedModeEnabled(settingsValues.mOneHandedModeEnabled)
-                        .setFnActive(fnState)
-                        .build();
-                
-                // Force keyboard refresh by setting the current keyboard again
-                if (mKeyboardView != null && mKeyboardView.getKeyboard() != null) {
-                    final int elementId = mKeyboardView.getKeyboard().mId.mElementId;
-                    setKeyboard(elementId, KeyboardSwitchState.OTHER);
-                }
-            }
+            // For now, just update the state without rebuilding the keyboard
+            // The FN selector system will handle the visual updates when needed
+            // Rebuilding during key press can cause crashes
+            
+            // TODO: Implement visual feedback for FN state change
+            // This could be done by invalidating specific keys or updating key labels
+            // without rebuilding the entire keyboard
         }
     }
 
@@ -337,6 +320,15 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             Log.d(TAG, "setSymbolsShiftedKeyboard");
         }
         setKeyboard(KeyboardId.ELEMENT_SYMBOLS_SHIFTED, KeyboardSwitchState.SYMBOLS_SHIFTED);
+    }
+
+    // Toggle FN state and rebuild keyboard
+    public void toggleFnState() {
+        if (DEBUG_ACTION) {
+            Log.d(TAG, "toggleFnState");
+        }
+        // Simply toggle the FN state
+        setFnState(!mFnState);
     }
 
     public boolean isImeSuppressedByHardwareKeyboard(
@@ -800,4 +792,5 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             // in tests isInputViewShown returns true, but showWindow throws "IllegalStateException: Window token is not set yet."
         }
     }
+
 }

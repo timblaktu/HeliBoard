@@ -3,12 +3,13 @@
 ## Overview
 The FN selector feature enables JSON-configurable function key layers in HeliBoard, allowing users to access extended functionality (arrows, function keys, navigation) through an FN modifier key without recompiling the app.
 
-## Implementation Status: ✅ COMPLETE (September 9, 2025)
+## Implementation Status: ⚠️ CRASH FIX NEEDED (September 9, 2025)
 - Core implementation: **Done**
 - Unit tests: **9/9 passing**
 - Production layouts: **3 created**
 - Build: **Successful**
 - APK: **Available in Download folder**
+- **CRITICAL BUG**: App crashes when FN key is pressed - handler not connected
 
 ## How to Use FN Selector in HeliBoard
 
@@ -33,19 +34,22 @@ The FN selector feature enables JSON-configurable function key layers in HeliBoa
    - In HeliBoard settings, tap "Languages & Layouts"
    - You'll see a list of available languages with toggle switches
 
-3. **Select English (US) Layout Options**
+3. **Select Main Layout (IMPORTANT: Step 1 of 2)**
    - Tap on "English (US)" (not the toggle switch)
-   - This opens a submenu showing all available layout variants
-   - The FN layouts appear with their JSON filenames:
-     - **qwerty** (standard)
-     - **qwerty_fn** - Standard layout with vim navigation and FN key
-     - **programmer_fn** - Developer-focused with symbols on FN layer
-     - **vim_fn** - Vim-optimized navigation with FN key
-     - QWERTZ, AZERTY, Dvorak, Colemak, etc.
+   - Under "Layout" section, tap the pencil icon
+   - Select one of the FN layouts:
+     - **QWERTY + FN** - Standard layout with vim navigation and FN key
+     - **Programmer + FN** - Developer-focused with symbols on FN layer
+     - **Vim + FN** - Vim-optimized navigation with FN key
 
-4. **Choose Your FN Layout**
-   - Tap the pencil icon next to your preferred FN layout
-   - The layout will be selected for English (US)
+4. **Select Functional Layout (IMPORTANT: Step 2 of 2)**
+   - Still in English (US) settings
+   - Scroll down to "Functional keys" section
+   - Tap the dropdown and select a layout with FN support:
+     - **functional_keys_qwerty_fn** - For QWERTY + FN
+     - **functional_keys_programmer_fn** - For Programmer + FN  
+     - **functional_keys_vim_fn** - For Vim + FN
+   - **NOTE**: You MUST select BOTH main and functional layouts or FN key won't appear!
 
 5. **Enable the Language**
    - Back in Languages & Layouts screen
@@ -205,12 +209,21 @@ cp app/build/outputs/apk/debug/*.apk ~/storage/shared/Download/
 
 ## Troubleshooting
 
+### ⚠️ APP CRASHES WHEN FN KEY PRESSED
+**Current Status**: Known bug - FN key handler not connected
+**Workaround**: None currently - waiting for fix
+**Root Cause**: FN key code (-5) needs handler in input processing chain
+
 ### FN Key Not Appearing
-- Make sure you selected an FN-enabled layout (ends with "+FN")
+- **IMPORTANT**: You must select BOTH:
+  1. Main layout (e.g., "Vim + FN") 
+  2. Functional layout (e.g., "functional_keys_vim_fn")
+- If you only select the main layout, FN key won't appear
 - Check Languages & Layouts settings
 
 ### FN Combinations Not Working
-- Verify you're holding FN while pressing other keys
+- Currently crashes on FN press - fix needed
+- Once fixed: Hold FN while pressing other keys
 - Try sliding from FN to target key
 - Check if the layout supports the combination
 

@@ -29,6 +29,9 @@
     <!-- Predefined keyboard layouts for additional subtype -->
     <string-array name="predefined_layouts">
         <item>qwerty</item>
+        <item>qwerty_fn</item>
+        <item>programmer_fn</item>
+        <item>vim_fn</item>
         <item>qwertz</item>
         <item>azerty</item>
         <item>dvorak</item>
@@ -42,6 +45,9 @@
     <!-- Predefined keyboard layout display names -->
     <string-array name="predefined_layout_display_names">
         <item>QWERTY</item>
+        <item>QWERTY + FN</item>
+        <item>Programmer + FN</item>
+        <item>Vim + FN</item>
         <item>QWERTZ</item>
         <item>AZERTY</item>
         <item>Dvorak</item>
