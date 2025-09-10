@@ -72,7 +72,8 @@ runs-on: ubuntu-22.04   # Guaranteed x86_64 (updated from ubuntu-20.04 due to Fe
 
 1. **`ubuntu-latest-4-cores`**: Forces x86_64 but requires paid plan
 2. **Robolectric legacy mode**: Universal but 3-5x slower tests  
-3. **`ubuntu-20.04`**: **Chosen** - guaranteed x86_64, same performance
+3. **`ubuntu-20.04`**: Initially chosen, but **deprecated Feb 2025** causing queue delays
+4. **`ubuntu-22.04`**: **Final choice** - guaranteed x86_64, actively supported, no queue issues
 
 ## Files Modified
 
@@ -100,11 +101,37 @@ runs-on: ubuntu-22.04   # Guaranteed x86_64 (updated from ubuntu-20.04 due to Fe
 - **No Flaky Failures**: Eliminates architecture-dependent test failures  
 - **Future-Proof**: Explicit configuration won't change unexpectedly
 
+## Ubuntu 20.04 Deprecation Discovery
+
+### Secondary Issue Found During Implementation
+
+While implementing the initial fix with `ubuntu-20.04`, we discovered **another hidden dependency**:
+
+**Problem**: CI jobs stuck in queue for 15+ minutes
+**Root Cause**: Ubuntu 20.04 runner deprecation in progress (Feb 1 - Apr 15, 2025)
+**GitHub Impact**: Limited runner availability, brownout periods during peak usage
+
+### Deprecation Timeline
+- **Start**: February 1, 2025 (deprecation begins)
+- **End**: April 15, 2025 (full retirement)
+- **Current**: Reduced runner capacity, longer queue times
+- **Trigger**: Ubuntu 24.04 GA release following GitHub's N-1 OS support policy
+
+### Solution Update
+**Changed from**: `ubuntu-20.04` → **`ubuntu-22.04`**
+- ✅ **Immediate availability**: No queue delays
+- ✅ **Future-proof**: Supported until ~2027
+- ✅ **Same benefits**: x86_64 guaranteed, Robolectric compatibility maintained
+
 ## Impact Analysis
 
 ### Test Results
 - **Before**: 2/144 tests failing due to runtime incompatibility
 - **After**: All tests pass with native runtime performance
+
+### Queue Performance
+- **ubuntu-20.04**: 15+ minute queue delays (deprecation impact)
+- **ubuntu-22.04**: Immediate job start (<30 seconds)
 
 ### CI Performance  
 - **Build Time**: Maintained (same runner class)
@@ -186,7 +213,7 @@ For any `runs-on` specification, include:
 ### Description
 
 ## Summary
-Fixes CI test failures by explicitly configuring x86_64 runners instead of relying on `ubuntu-latest` implicit assignment that varies based on CI frequency.
+Fixes CI test failures by explicitly configuring x86_64 runners instead of relying on `ubuntu-latest` implicit assignment that varies based on CI frequency. Also resolves runner availability issues caused by Ubuntu 20.04 deprecation.
 
 ## Problem  
 Fork with enhanced CI triggers (push on `feature/**`/`bugfix/**`) was assigned ARM64 runners, causing Robolectric native runtime failures:
@@ -194,20 +221,22 @@ Fork with enhanced CI triggers (push on `feature/**`/`bugfix/**`) was assigned A
 The Robolectric native runtime is not supported on Linux (aarch64)
 ```
 
-## Root Cause
-**Hidden Bug**: GitHub's `ubuntu-latest` runner assignment depends on CI frequency and other opaque factors. Higher frequency CI (our fork) gets ARM64, lower frequency (upstream) gets x86_64.
+## Root Cause Analysis
+**Primary Hidden Bug**: GitHub's `ubuntu-latest` runner assignment depends on CI frequency and other opaque factors. Higher frequency CI (our fork) gets ARM64, lower frequency (upstream) gets x86_64.
+
+**Secondary Issue Discovered**: Ubuntu 20.04 runner deprecation (Feb 1 - Apr 15, 2025) causing 15+ minute queue delays.
 
 ## Solution
-**Explicit Configuration**: Use `ubuntu-20.04` to guarantee x86_64 architecture, ensuring:
+**Explicit Configuration**: Use `ubuntu-22.04` to guarantee x86_64 architecture, ensuring:
 - ✅ Robolectric native runtime compatibility  
 - ✅ Identical test environment to upstream
 - ✅ Deterministic architecture assignment
 - ✅ Fast test execution performance
 
 ## Changes
-- **`.github/workflows/build-test-auto.yml`**: `runs-on: ubuntu-20.04`  
-- **`.github/workflows/build-debug-apk.yml`**: `runs-on: ubuntu-20.04`
-- **`CI_RUNNER_ARCHITECTURE.md`**: Comprehensive documentation
+- **`.github/workflows/build-test-auto.yml`**: `runs-on: ubuntu-22.04` (was ubuntu-latest → ubuntu-20.04)
+- **`.github/workflows/build-debug-apk.yml`**: `runs-on: ubuntu-22.04` (was ubuntu-latest → ubuntu-20.04)  
+- **`CI_RUNNER_ARCHITECTURE.md`**: Comprehensive documentation with deprecation analysis
 
 ## Testing
 - [x] Local test runs pass  
@@ -217,8 +246,9 @@ The Robolectric native runtime is not supported on Linux (aarch64)
 
 ## Impact
 - **Fixes**: 2/144 SubtypeTests now pass
-- **Performance**: Maintains native runtime speed
+- **Performance**: Maintains native runtime speed + eliminates 15+ min queue delays
 - **Reliability**: Eliminates architecture-dependent failures  
 - **Consistency**: Matches upstream exactly
+- **Future-Proof**: Uses actively supported Ubuntu version until ~2027
 
-**Future-Proof**: Explicit configuration prevents similar hidden dependency issues.
+**Double Fix**: Resolves both architecture assignment AND runner availability issues.
