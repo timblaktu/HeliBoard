@@ -4,6 +4,7 @@ name: Test build
 on:
   push:
     branches:
+      - dev
       - 'feature/**'
       - 'bugfix/**'
     paths:
