@@ -1,6 +1,15 @@
 name: Build debug APK
 
 on:
+  push:
+    branches:
+      - main
+      - dev
+      - 'feature/**'
+      - 'bugfix/**'
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
