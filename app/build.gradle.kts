@@ -1,7 +1,7 @@
 plugins {
     id("com.android.application")
     kotlin("android")
-    kotlin("plugin.serialization") version "2.1.21"
+    kotlin("plugin.serialization") version "2.2.10"
     kotlin("plugin.compose") version "2.0.0"
 }
 
@@ -79,7 +79,7 @@ android {
             path = File("src/main/jni/Android.mk")
         }
     }
-    ndkVersion = "28.0.13004108"
+    ndkVersion = "27.1.12297006"
 
     packaging {
         jniLibs {
@@ -123,7 +123,7 @@ dependencies {
     implementation("androidx.viewpager2:viewpager2:1.1.0")
 
     // kotlin
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
 
     // compose
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
