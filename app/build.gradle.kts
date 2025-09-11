@@ -60,7 +60,7 @@ android {
             isMinifyEnabled = true
             isJniDebuggable = false
             applicationIdSuffix = ".debug"
-            versionNameSuffix = "-$gitDescribe
+            versionNameSuffix = "-$gitDescribe"
         }
         create("runTests") { // build variant for running tests on CI that skips tests known to fail
             isMinifyEnabled = false
